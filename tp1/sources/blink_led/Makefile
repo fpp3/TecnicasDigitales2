@@ -5,7 +5,7 @@ CC = $(GCC)gcc
 AS = $(GCC)as
 LD = $(GCC)ld
 BIN = $(GCC)objcopy
-CFLAGS = -mthumb-mcpu=cortex-m3 -O0 -g
+CFLAGS = -mthumb -mcpu=cortex-m3 -O0 -g
 
 all: app.bin
 
