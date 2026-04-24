@@ -1,0 +1,33 @@
+\chapter{Introducción}
+\label{chap:introduccion}
+
+En este trabajo práctico se aborda la programación de microcontroladores con núcleo ARM 
+Cortex-M3, específicamente el \textbf{STM32F103C8T6} presente en la placa \textbf{BluePill}, 
+utilizando un enfoque de nivel bajo o \textbf{bare-metal}. El objetivo es comprender el 
+funcionamiento del hardware y las herramientas de desarrollo sin capas de abstracción 
+intermedias que oculten los detalles de implementación.
+
+\section{Hardware Utilizado}
+
+Para el desarrollo de las actividades se emplearon los siguientes elementos:
+
+\begin{itemize}
+    \item \textbf{Placa BluePill}: Basada en el microcontrolador STM32F103C8T6. Cuenta con 
+    una frecuencia de reloj de $72 \MHz$, $64 \kB$ de memoria Flash y $20 \kB$ de RAM.
+    \item \textbf{Programador ST-Link V2}: Interfaz que permite la grabación y depuración 
+    del microcontrolador a través del protocolo SWD.
+\end{itemize}
+
+\section{Software y Herramientas}
+
+Se utilizó el ecosistema de herramientas estándar de GNU para sistemas embebidos:
+
+\begin{itemize}
+    \item \textbf{GNU ARM Toolchain}: Colección de compiladores, enlazadores y utilidades 
+    para la arquitectura ARM (\texttt{gcc-arm-none-eabi}).
+    \item \textbf{Make}: Herramienta para la automatización del proceso de compilación.
+    \item \textbf{OpenOCD}: Software para la comunicación con el programador y el 
+    microcontrolador.
+    \item \textbf{GDB}: Depurador estándar para inspeccionar el estado del programa en 
+    tiempo de ejecución.
+\end{itemize}

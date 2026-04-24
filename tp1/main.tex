@@ -1,0 +1,66 @@
+\documentclass[]{informeutn}
+
+% Paquetes adicionales
+\usepackage[backend=bibtex, style=alphabetic, sorting=ynt]{biblatex}
+\usepackage{csquotes}
+\usepackage{listings}
+\addbibresource{fuentes.bib}
+
+% Unidades adicionales
+\newcommand{\MHz}{\,\mathrm{MHz}}
+\newcommand{\kB}{\,\mathrm{kB}}
+
+% Estilos para listados de código
+\lstdefinestyle{arm-asm}{
+  backgroundcolor=\color{gray!10},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!60!black},
+  frame=single,
+  breaklines=true,
+  captionpos=b
+}
+
+\lstdefinestyle{c-code}{
+  backgroundcolor=\color{gray!10},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!60!black},
+  frame=single,
+  breaklines=true,
+  captionpos=b,
+  language=C
+}
+
+\lstdefinestyle{ltspice}{
+  backgroundcolor=\color{gray!10},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  frame=single,
+  breaklines=true,
+  captionpos=b
+}
+
+% Metadatos
+\materia{Técnicas Digitales II}
+\titulo{Trabajo Práctico Nro 1}
+\subtitulo{Programación de la placa BluePill usando GNU ARM Toolchain}
+\comision{4R1}
+\autores{Gastón Prieto}
+\fecha{\today}
+
+\begin{document}
+  \maketitle
+  \tableofcontents
+  \setcounter{page}{1}
+  \thispagestyle{plain}
+  
+  \input{chapters/1-introduccion.tex}
+  \input{chapters/2-desarrollo.tex}
+  \input{chapters/3-conclusiones.tex}
+  \input{chapters/4-anexos.tex}
+  
+  \nocite{*}
+  \printbibliography[heading=bibnumbered, title={Fuentes}]
+  
+\end{document}

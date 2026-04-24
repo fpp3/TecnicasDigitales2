@@ -1,0 +1,41 @@
+\chapter{Desarrollo}
+\label{chap:desarrollo}
+
+El proyecto principal consistió en implementar un \textbf{Blink LED} utilizando el LED 
+integrado en la placa BluePill, el cual se encuentra conectado al pin \textbf{PC13}.
+
+\section{Configuración de Periféricos}
+
+Para controlar el LED, es necesario configurar el puerto C y el pin 13. El proceso 
+implica los siguientes pasos:
+
+\begin{enumerate}
+    \item \textbf{Habilitación del reloj (Clock Gating)}: Se debe habilitar el reloj para 
+    el puerto C en el registro \texttt{RCC\_APB2ENR}.
+    \item \textbf{Configuración del pin}: Se configura el pin PC13 como salida en el 
+    registro \texttt{GPIOC\_CRH}.
+\end{enumerate}
+
+\section{Archivos del Proyecto}
+
+El firmware se compone de tres archivos fundamentales:
+
+\begin{itemize}
+    \item \texttt{main.c}: Contiene la lógica principal del programa y el bucle de parpadeo.
+    \item \texttt{crt.s}: Archivo de \textit{startup} en ensamblador que inicializa el 
+    puntero de pila y el vector de interrupciones.
+    \item \texttt{linker.ld}: Script del enlazador que define la distribución de la 
+    memoria Flash y RAM.
+\end{itemize}
+
+\section{Proceso de Compilación y Grabación}
+
+Se utilizó un \texttt{Makefile} para automatizar la generación del binario. El flujo 
+consiste en compilar los archivos fuente a objetos, enlazarlos para generar un archivo 
+ELF, y finalmente extraer el binario (\texttt{.bin}).
+
+Para la grabación se utilizó OpenOCD con el comando:
+\begin{verbatim}
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg
+\end{verbatim}
+seguido de los comandos de grabación en la consola de OpenOCD.
