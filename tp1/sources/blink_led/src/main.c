@@ -3,14 +3,14 @@
 typedef volatile uint32_t register_t;
 
 #define GPIOC_BASE_ADDRESS 0x40011000
-#define GPIOC_CRL   (*(register_t *)(GPIOC_BASE_ADDRESS))          // GPIOC configuration register L (0-7)
-#define GPIOC_CRH   (*(register_t *)(GPIOC_BASE_ADDRESS + 0x04U))  // GPIOC configuration register H (8-15)
-#define GPIOC_ODR   (*(register_t *)(GPIOC_BASE_ADDRESS + 0x0CU))  // GPIOC Output data register
-#define GPIOC_BSRR  (*(register_t *)(GPIOC_BASE_ADDRESS + 0x10U))  // GPIOC Set/Reset register (atomic)
-#define GPIOC_BRR   (*(register_t *)(GPIOC_BASE_ADDRESS + 0x14U))  // GPIOC Reset register (atomic)
+#define GPIOC_CRL   (*(register_t *)(GPIOC_BASE_ADDRESS))         // GPIOC cfg register L (0-7)
+#define GPIOC_CRH   (*(register_t *)(GPIOC_BASE_ADDRESS + 0x04U)) // GPIOC cfg register H (8-15)
+#define GPIOC_ODR   (*(register_t *)(GPIOC_BASE_ADDRESS + 0x0CU)) // GPIOC Output data reg
+#define GPIOC_BSRR  (*(register_t *)(GPIOC_BASE_ADDRESS + 0x10U)) // GPIOC Set/Reset reg (atomic)
+#define GPIOC_BRR   (*(register_t *)(GPIOC_BASE_ADDRESS + 0x14U)) // GPIOC Reset reg (atomic)
 
 #define RCC_BASE_ADDRESS 0x40021000
-#define RCC_APB2ENR (*(register_t *)(RCC_BASE_ADDRESS + 0x18U))    // Advanced Peripheral Bus 2 clock enable register
+#define RCC_APB2ENR (*(register_t *)(RCC_BASE_ADDRESS + 0x18U))   // Advanced Peripheral Bus 2 clk en reg
 
 int main() {
   RCC_APB2ENR = 1 << 4; // Como el valor despues de reset es 0x0, no deberia haber problema en hacer una asignacion
