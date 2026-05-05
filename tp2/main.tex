@@ -1,0 +1,68 @@
+\documentclass[]{informeutn}
+
+% Paquetes adicionales
+\usepackage[backend=bibtex, style=alphabetic, sorting=ynt]{biblatex}
+\usepackage{csquotes}
+\usepackage{listings}
+\addbibresource{fuentes.bib}
+
+% Unidades adicionales
+\newcommand{\MHz}{\,\mathrm{MHz}}
+\newcommand{\kB}{\,\mathrm{kB}}
+
+% Estilos para listados de código
+\usepackage{courier}
+\usepackage{color}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{ %
+  backgroundcolor=\color{white},
+  basicstyle=\scriptsize\ttfamily,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{mygreen},
+  deletekeywords={...},
+  escapeinside={\%*}{*)},
+  extendedchars=true,
+  frame=single,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  otherkeywords={*,...},
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\tiny\color{mygray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  stringstyle=\color{mymauve},
+  tabsize=2,
+  title=\lstname
+}
+
+% Metadatos
+\materia{Técnicas Digitales II}
+\titulo{Trabajo Práctico Nro 2}
+\subtitulo{Título del Trabajo Práctico}
+\comision{4R1}
+\autores{Gastón Grasso 401892\\ Franco Palombo 401910\\ Angelo Prieto 401012}
+\fecha{\today}
+
+\begin{document}
+  \maketitle
+  \tableofcontents
+  \setcounter{page}{1}
+  \thispagestyle{plain}
+  
+  \input{chapters/1-introduccion.tex}
+  \input{chapters/2-desarrollo.tex}
+  \input{chapters/3-conclusiones.tex}
+  
+  \nocite{*}
+  \printbibliography[heading=bibnumbered, title={Fuentes}]
+  
+\end{document}
