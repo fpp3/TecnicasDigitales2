@@ -2,7 +2,7 @@ PREFIX   = arm-none-eabi-
 CC       = $(PREFIX)gcc
 OBJCOPY  = $(PREFIX)objcopy
 CFLAGS   = -mcpu=cortex-m3 -mthumb -g -Wall
-CFLAGS  += -Isrc -I. -ICMSIS
+CFLAGS  += -Iinclude
 CFLAGS  += -DSTM32F103xB
 CFLAGS  += -MMD -MP
 
@@ -44,6 +44,21 @@ flash: $(BUILD_DIR)/$(TARGET).elf
 
 flash_clone: $(BUILD_DIR)/$(TARGET).elf
 	openocd -f interface/stlink.cfg -c "set CPUTAPID 0x2ba01477" -f target/stm32f1x.cfg -c "program $< verify reset exit"
+
+launch: flash
+	@echo
+	@echo "ejecutar \"make attach\""
+	@echo
+	openocd -f interface/stlink.cfg -f target/stm32f1x.cfg
+
+launch_clone: flash_clone
+	@echo
+	@echo "ejecutar \"make attach\""
+	@echo
+	openocd -f interface/stlink.cfg -c "set CPUTAPID 0x2ba01477" -f target/stm32f1x.cfg
+
+attach:
+	gdb $(BUILD_DIR)/$(TARGET).elf --ex "target extended-remote :3333"
 
 $(BUILD_DIR):
 	mkdir -p $@
