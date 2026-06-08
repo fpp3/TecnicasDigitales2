@@ -1,0 +1,20 @@
+\chapter{Conclusiones}
+\label{ch:conclusiones}
+
+Tras el análisis e implementación del Ejercicio Práctico N.o 1, se concluye que se han alcanzado satisfactoriamente
+los objetivos propuestos. La utilización de una interrupción externa gestionada a través del NVIC y el módulo EXTI
+ha permitido resolver de manera eficiente la detección y el procesamiento de eventos asíncronos (la pulsación del
+botón en PC15), rompiendo el flujo secuencial del programa principal sin requerir un muestreo periódico (polling).
+
+El desarrollo en un entorno Bare Metal puro (sin sistemas operativos ni capas de abstracción complejas) ha resultado
+fundamental para comprender de manera profunda el comportamiento a bajo nivel de la arquitectura ARM Cortex-M3. La
+configuración manual de registros específicos como los de habilitación de reloj en el RCC, control de puertos GPIO,
+asociación de líneas en el AFIO, configuración de flancos en el EXTI, y activación en el NVIC proporciona un control
+absoluto sobre el hardware y optimiza el uso de recursos de memoria y CPU.
+
+Asimismo, la implementación de la tabla de vectores en el archivo de inicio en ensamblador y la definición exacta de la
+distribución física en el script de enlazado ponen de manifiesto la estrecha relación que existe entre el software
+desarrollado y la estructura del hardware subyacente. Se constata la vital importancia de limpiar el flag pendiente
+de interrupción en el registro correspondiente antes de finalizar la rutina de servicio, ya que la omisión de este
+paso invalida el comportamiento esperado del microcontrolador al generar bucles infinitos de atención.
+

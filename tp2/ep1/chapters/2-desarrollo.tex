@@ -1,0 +1,154 @@
+\chapter{Desarrollo}
+\label{ch:desarrollo}
+
+En este capítulo se detalla la resolución técnica del primer ejercicio práctico, correspondiente al diseño e
+implementación del sistema de gestión de interrupciones externas utilizando la placa BluePill en un entorno Bare Metal.
+
+\section{Ejercicio Práctico N1: interrupciones externas y el NVIC}
+\label{sec.ej1:interrupciones}
+
+El objetivo de este ejercicio consiste en configurar el microcontrolador STM32F103C8T6 para que el LED de depuración
+interno (conectado al pin PC13) permanezca parpadeando periódicamente en el bucle principal, mientras que un pulsador
+(conectado al pin PC15) modifica de forma asíncrona, mediante interrupción externa, el estado de un LED externo
+(conectado al pin PC14).
+
+Para llevar a cabo la resolución de este ejercicio práctico, el proyecto se divide en tres archivos fundamentales: el
+código de arranque en ensamblador (\texttt{crt.s}), el script de enlazado (\texttt{linker.ld}) y el código fuente
+principal en C (\texttt{main.c}). A continuación, se detalla el análisis de cada uno de ellos y la relación funcional
+que existe entre sí.
+
+\subsection{Archivo de Inicialización y Tabla de Vectores}
+\label{sec.ej1:inicializacion}
+
+El archivo \texttt{crt.s}, cuyo código se expone en el listado~\ref{list.ej1:crt}, representa el código de inicio (startup)
+del sistema. Al energizar el microcontrolador, la CPU del Cortex-M3 inicializa el puntero de pila (Stack Pointer) con el
+valor ubicado en la dirección de memoria \texttt{0x08000000} (inicio de la memoria FLASH) y salta a la dirección del vector
+de reinicio (Reset Vector) ubicada en \texttt{0x08000004}.
+
+En este archivo se define la sección \texttt{.isr\_vector}, la cual contiene la tabla de vectores de interrupción requerida por
+la arquitectura ARM Cortex-M3~\cite{cortexm3trm}. Las primeras posiciones corresponden a excepciones internas del núcleo (Reset, NMI y Hard Fault).
+Las posiciones del núcleo restantes (de la 4 a la 15) se rellenan con ceros mediante la directiva \texttt{.rept 12}, ya que no
+son utilizadas en esta aplicación.
+
+A continuación de las excepciones del núcleo, se posicionan los vectores de interrupción específicos de los periféricos de
+la placa STM32. La interrupción asociada a las líneas externas EXTI15 a EXTI10 corresponde a la posición física 40 de la tabla
+de periféricos (posición 56 en la tabla global, considerando los 16 vectores del núcleo). Por lo tanto, se agregan 40 palabras
+en cero utilizando \texttt{.rept 40} para ocupar los espacios de los periféricos anteriores y, finalmente, se registra la
+función \texttt{EXTI15\_10\_IRQHandler} en la posición 56.
+
+El punto de entrada físico del firmware es el manejador de reset \texttt{\_reset}, el cual llama a la función principal en C
+mediante la instrucción de ramificación con enlace \texttt{bl main}. Si la función principal retornara, el microcontrolador
+quedaría en un bucle infinito para evitar comportamientos erráticos.
+
+\lstinputlisting[language={[x86masm]Assembler}, caption={Archivo de inicialización y tabla de vectores (\texttt{crt.s}).}, label={list.ej1:crt}]{sources/src/crt.s}
+
+\subsection{Script de Enlazado}
+\label{sec.ej1:enlazador}
+
+El archivo \texttt{linker.ld}, presentado en el listado~\ref{list.ej1:linker}, es el script de configuración del enlazador
+(GNU Linker). Su función principal es indicar cómo deben distribuirse las secciones de código y datos dentro del espacio de
+direcciones de memoria del microcontrolador.
+
+En primer lugar, define el bloque \texttt{MEMORY}, especificando que el chip STM32F103C8T6 posee una memoria FLASH de lectura
+y ejecución (\texttt{rx}) de $64\kB$ con origen en \texttt{0x08000000}, y una memoria RAM de lectura, escritura y ejecución
+(\texttt{xrw}) de $20\kB$ con origen en \texttt{0x20000000}.
+
+El símbolo \texttt{\_esstack} se calcula sumando el origen de la RAM con su longitud, apuntando así a la última posición de la
+memoria RAM (pila invertida o descendente). Este símbolo es exportado y consumido directamente en la primera posición de la
+tabla de vectores en \texttt{crt.s}.
+
+Dentro del bloque \texttt{SECTIONS}, la directiva \texttt{KEEP(*(.isr\_vector))} asegura que la sección de la tabla de vectores
+de interrupción no sea eliminada por optimizaciones del compilador y que se ubique de manera obligatoria al principio de la
+memoria FLASH. Posteriormente, se disponen las secciones de código y constantes (\texttt{.text} y \texttt{.rodata}) en la FLASH,
+mientras que las secciones de variables globales (\texttt{.data} y \texttt{.bss}) se mapean para su uso en la RAM.
+
+\lstinputlisting[caption={Script de enlazado de memoria (\texttt{linker.ld}).}, label={list.ej1:linker}]{sources/src/linker.ld}
+
+\subsection{Código Fuente Principal en C}
+\label{sec.ej1:codigo_c}
+
+El archivo \texttt{main.c}, expuesto en el listado~\ref{list.ej1:main}, implementa la inicialización de los registros
+de control y la rutina de servicio para procesar las interrupciones externas. Al no contar con los archivos de cabecera estándar del fabricante,
+se definen de manera explícita las direcciones físicas de los periféricos basándose en el manual de referencia~\cite{stm32f103rm}.
+
+\subsubsection{Mapeo de Registros}
+
+\begin{itemize}
+    \item \texttt{GPIOC}: Con dirección base en \texttt{0x40011000}, define los registros \texttt{GPIOC\_CRL} y
+    \texttt{GPIOC\_CRH} para configurar el modo de funcionamiento de los pines, \texttt{GPIOC\_ODR} para manejar
+    la salida de datos o las resistencias de pull-up/pull-down internas, y \texttt{GPIOC\_BSRR} para modificar
+    estados de pines de forma atómica.
+    \item \texttt{RCC}: Dirección base \texttt{0x40021000}. El registro \texttt{RCC\_APB2ENR} permite habilitar el
+    reloj de los periféricos conectados al bus APB2 (en este caso, el puerto C y el módulo de funciones alternas AFIO).
+    \item \texttt{AFIO}: Dirección base \texttt{0x40010000}. El registro \texttt{AFIO\_EXTICR4} configura qué puerto
+    físico se asocia a las líneas de interrupción externa de la 12 a la 15.
+    \item \texttt{EXTI}: Dirección base \texttt{0x40010400}. Contiene registros como \texttt{EXTI\_IMR} (máscara
+    de interrupciones), \texttt{EXTI\_FTSR} (detección por flanco de bajada) y \texttt{EXTI\_PR} (registro de
+    petición pendiente).
+    \item \texttt{NVIC}: Se accede al registro de habilitación del núcleo ARM Cortex-M3 en la dirección
+    \texttt{0xE000E104} (\texttt{NVIC\_ISER1}) para controlar el estado del canal EXTI15\_10.
+\end{itemize}
+
+\subsubsection{Configuración Paso a Paso en la Función Principal}
+
+Dentro del ciclo de inicialización en la función \texttt{main()}, se ejecutan las siguientes acciones en secuencia:
+\begin{enumerate}
+    \item Habilitación del reloj de periféricos: Se configuran los bits 4 y 0 de \texttt{RCC\_APB2ENR} para
+    suministrar señal de reloj al puerto GPIOC y al periférico AFIO. Sin esta habilitación, cualquier escritura en los
+    registros de dichos módulos será ignorada por el hardware.
+    \item Configuración de PC13 y PC14 como salidas: Se limpian los campos de configuración en \texttt{GPIOC\_CRH} para
+    los pines 13 y 14, y se establece en ambos el valor \texttt{0x3} (modo salida de propósito general push-pull con una
+    velocidad máxima de conmutación de $50\MHz$). En el puerto PC13 se encuentra conectado el led interno y en el puerto
+    PC14 se conectará un led externo que será controlado mediante la interrupción externa.
+    \item Configuración de PC15 como entrada con Pull-up: Se configura el campo de control en
+    \texttt{GPIOC\_CRH} con el valor \texttt{0x8} (modo entrada con resistencia interna) y luego se escribe un '1' en el
+    bit 15 del registro \texttt{GPIOC\_ODR} para configurar dicha resistencia como pull-up. Esto mantiene el pin en un nivel
+    lógico alto por defecto, cayendo a nivel bajo al pulsar el botón conectado a tierra.
+    \item Asociación de la interrupción al Pin PC15: Se escribe el valor \texttt{0x2} en el registro
+    \texttt{AFIO\_EXTICR4} en el rango correspondiente a la línea 15. Esto le indica al multiplexor de interrupciones
+    del microcontrolador que la línea EXTI15 debe responder al Puerto C (donde se encuentra el pulsador).
+    \item Configuración de disparo de la interrupción externa: Se escribe un '1' en el bit 15 de
+    \texttt{EXTI\_FTSR} para detectar flancos descendentes. De esta manera, el evento de interrupción se disparará en el
+    instante exacto en el que el botón sea presionado.
+    \item Desenmascaramiento de la línea EXTI15: Se habilita la propagación de la señal escribiendo un '1'
+    en el bit 15 del registro de máscara \texttt{EXTI\_IMR}.
+    \item Activación en el NVIC: Se escribe un '1' en el bit 8 de \texttt{NVIC\_ISER1}. Como el canal EXTI15\_10 posee el
+    número de interrupción (IRQ) 40, este se activa mediante el bit 8 de la segunda palabra del registro de habilitación
+    del NVIC ($40 - 32 = 8$).
+\end{enumerate}
+
+Una vez completada la inicialización, la CPU ejecuta de forma ininterrumpida el bucle principal \texttt{while(1)},
+que alterna el estado del LED interno en PC13 mediante retardos por software (bucles vacíos de larga duración).
+
+\subsubsection{Rutina de Servicio de Interrupción (ISR)}
+
+Cuando se produce un flanco descendente en el pin PC15, la CPU suspende la ejecución en el programa principal, almacena
+los registros de estado en la pila e ingresa a la ISR \texttt{EXTI15\_10\_IRQHandler}. Dentro de esta rutina:
+\begin{enumerate}
+    \item Se comprueba si la interrupción proviene de la línea 15 mediante la verificación del bit correspondiente en
+    la máscara de interrupción.
+    \item Se invierte el estado del LED externo en PC14 aplicando una operación XOR a nivel de bit sobre el registro \texttt{GPIOC\_ODR}.
+    \item Limpieza del flag de interrupción: Se escribe un '1' en el bit 15 del registro de estado \texttt{EXTI\_PR}. En el
+    controlador de interrupciones externas de la arquitectura STM32, la limpieza de las banderas pendientes se realiza por
+    software escribiendo un '1' en la posición correspondiente. Omitir este paso provocaría que, al salir de la ISR, el núcleo
+    detecte la interrupción como activa de forma permanente, volviendo a ejecutar la ISR de manera indefinida y bloqueando
+    el sistema.
+\end{enumerate}
+
+\lstinputlisting[language={C}, caption={Código fuente principal e implementación de la ISR (\texttt{main.c}).}, label={list.ej1:main}]{sources/src/main.c}
+
+\subsection{Relación y Flujo de Ejecución entre los Componentes}
+\label{sec.ej1:relacion}
+
+La interacción de los tres archivos de desarrollo analizados conforma la base necesaria para la correcta ejecución
+en Bare Metal:
+\begin{enumerate}
+    \item El archivo de enlazado (\texttt{linker.ld}) asigna de manera rígida los límites de la memoria física y
+    establece que la tabla de vectores definida en \texttt{crt.s} comience exactamente en la posición \texttt{0x08000000}.
+    \item El código en ensamblador (\texttt{crt.s}) posiciona la dirección física de la rutina
+    \texttt{EXTI15\_10\_}\allowbreak\texttt{IRQHandler} en el vector número 40 del NVIC (posición 56 de la tabla).
+    \item Durante la compilación y el enlace, el compilador traduce la función definida en \texttt{main.c} en una
+    dirección física de memoria, la cual el enlazador copia en el vector asignado dentro de la tabla de interrupciones.
+    \item Cuando la interrupción física se produce en el microcontrolador, el NVIC consulta la dirección de memoria
+    asociada al vector 40 en la FLASH y salta hacia la función implementada en C, logrando la interacción asíncrona.
+\end{enumerate}
