@@ -7,10 +7,19 @@ implementación del sistema de gestión de interrupciones externas utilizando la
 \section{Ejercicio Práctico N1: interrupciones externas y el NVIC}
 \label{sec.ej1:interrupciones}
 
-El objetivo de este ejercicio consiste en configurar el microcontrolador STM32F103C8T6 para que el LED de depuración
-interno (conectado al pin PC13) permanezca parpadeando periódicamente en el bucle principal, mientras que un pulsador
-(conectado al pin PC15) modifica de forma asíncrona, mediante interrupción externa, el estado de un LED externo
-(conectado al pin PC14).
+En este ejercicio se ha configurado el microcontrolador STM32F103C8T6 para que el LED
+interno (conectado al pin PC13) permanezca parpadeando periódicamente en el bucle principal, mientras que se
+implementan dos pulsadores externos asociados a interrupciones externas con diferentes prioridades en el NVIC:
+\begin{itemize}
+    \item El Botón A (conectado en la GPIO C15) activa la interrupción de alta 
+    prioridad (EXTI15\_10) que comanda el led externo 1 (conectado en la GPIO C14), haciéndolo parpadear 15 veces de forma rápida.
+    \item El Botón B (conectado en la GPIO B0) activa la interrupción de baja prioridad (EXTI0)
+    que comanda el led externo 2 (conectado en la GPIO B1), haciéndolo parpadear 15 veces de forma rápida.
+\end{itemize}
+
+El propósito de contar con este par de botones y leds es demostrar físicamente el mecanismo de la
+anidación de interrupciones en el NVIC, observando cómo la interrupción de alta prioridad puede interrumpir la de
+baja prioridad, deteniendo temporalmente su ciclo de parpadeo.
 
 Para llevar a cabo la resolución de este ejercicio práctico, el proyecto se divide en tres archivos fundamentales: el
 código de arranque en ensamblador (\texttt{crt.s}), el script de enlazado (\texttt{linker.ld}) y el código fuente
@@ -30,17 +39,18 @@ la arquitectura ARM Cortex-M3~\cite{cortexm3trm}. Las primeras posiciones corres
 Las posiciones del núcleo restantes (de la 4 a la 15) se rellenan con ceros mediante la directiva \texttt{.rept 12}, ya que no
 son utilizadas en esta aplicación.
 
-A continuación de las excepciones del núcleo, se posicionan los vectores de interrupción específicos de los periféricos de
-la placa STM32. La interrupción asociada a las líneas externas EXTI15 a EXTI10 corresponde a la posición física 40 de la tabla
-de periféricos (posición 56 en la tabla global, considerando los 16 vectores del núcleo). Por lo tanto, se agregan 40 palabras
-en cero utilizando \texttt{.rept 40} para ocupar los espacios de los periféricos anteriores y, finalmente, se registra la
-función \texttt{EXTI15\_10\_IRQHandler} en la posición 56.
+A continuación de las excepciones del núcleo, se posicionan los vectores de interrupción específicos de los
+periféricos de la placa STM32. Para demostrar el manejo de prioridades e interrupción anidada, se implementan
+dos controladores de interrupción diferentes: \texttt{EXTI0\_IRQHandler} (asociado a la línea EXTI0, posición
+física 6 de los periféricos y 22 global) y \texttt{EXTI15\_10\_IRQHandler} (asociado a las líneas EXTI15 a EXTI10,
+posición física 40 de los periféricos y 56 global). Para ubicarlos de forma exacta en la FLASH, se rellenan
+las posiciones intermedias con ceros usando las directivas \texttt{.rept 6} y \texttt{.rept 33}.
 
 El punto de entrada físico del firmware es el manejador de reset \texttt{\_reset}, el cual llama a la función principal en C
 mediante la instrucción de ramificación con enlace \texttt{bl main}. Si la función principal retornara, el microcontrolador
 quedaría en un bucle infinito para evitar comportamientos erráticos.
 
-\lstinputlisting[language={[x86masm]Assembler}, caption={Archivo de inicialización y tabla de vectores (\texttt{crt.s}).}, label={list.ej1:crt}]{sources/src/crt.s}
+\lstinputlisting[language={ARM-Assembly}, caption={Archivo de inicialización y tabla de vectores (\texttt{crt.s}).}, label={list.ej1:crt}]{sources/src/crt.s}
 
 \subsection{Script de Enlazado}
 \label{sec.ej1:enlazador}
@@ -62,7 +72,7 @@ de interrupción no sea eliminada por optimizaciones del compilador y que se ubi
 memoria FLASH. Posteriormente, se disponen las secciones de código y constantes (\texttt{.text} y \texttt{.rodata}) en la FLASH,
 mientras que las secciones de variables globales (\texttt{.data} y \texttt{.bss}) se mapean para su uso en la RAM.
 
-\lstinputlisting[caption={Script de enlazado de memoria (\texttt{linker.ld}).}, label={list.ej1:linker}]{sources/src/linker.ld}
+\lstinputlisting[language={LinkerScript}, caption={Script de enlazado de memoria (\texttt{linker.ld}).}, label={list.ej1:linker}]{sources/src/linker.ld}
 
 \subsection{Código Fuente Principal en C}
 \label{sec.ej1:codigo_c}
@@ -74,65 +84,77 @@ se definen de manera explícita las direcciones físicas de los periféricos bas
 \subsubsection{Mapeo de Registros}
 
 \begin{itemize}
-    \item \texttt{GPIOC}: Con dirección base en \texttt{0x40011000}, define los registros \texttt{GPIOC\_CRL} y
-    \texttt{GPIOC\_CRH} para configurar el modo de funcionamiento de los pines, \texttt{GPIOC\_ODR} para manejar
-    la salida de datos o las resistencias de pull-up/pull-down internas, y \texttt{GPIOC\_BSRR} para modificar
-    estados de pines de forma atómica.
-    \item \texttt{RCC}: Dirección base \texttt{0x40021000}. El registro \texttt{RCC\_APB2ENR} permite habilitar el
-    reloj de los periféricos conectados al bus APB2 (en este caso, el puerto C y el módulo de funciones alternas AFIO).
-    \item \texttt{AFIO}: Dirección base \texttt{0x40010000}. El registro \texttt{AFIO\_EXTICR4} configura qué puerto
-    físico se asocia a las líneas de interrupción externa de la 12 a la 15.
-    \item \texttt{EXTI}: Dirección base \texttt{0x40010400}. Contiene registros como \texttt{EXTI\_IMR} (máscara
-    de interrupciones), \texttt{EXTI\_FTSR} (detección por flanco de bajada) y \texttt{EXTI\_PR} (registro de
-    petición pendiente).
-    \item \texttt{NVIC}: Se accede al registro de habilitación del núcleo ARM Cortex-M3 en la dirección
-    \texttt{0xE000E104} (\texttt{NVIC\_ISER1}) para controlar el estado del canal EXTI15\_10.
+    \item \texttt{GPIOB}: Con dirección base en \texttt{0x40010C00}, define los registros \texttt{GPIOB\_CRL}
+    y \texttt{GPIOB\_ODR} para configurar el segundo botón (PB0) como entrada con pull-up y el segundo led
+    externo (PB1) como salida digital push-pull.
+    \item \texttt{GPIOC}: Dirección base en \texttt{0x40011000}, define el registro de configuración alto
+    \texttt{GPIOC\_CRH} para los pines 13, 14 y 15, \texttt{GPIOC\_ODR} para el manejo de los estados de
+    los pines de salida, y \texttt{GPIOC\_BSRR} para la alternancia atómica del led indicador interno.
+    \item \texttt{RCC}: Dirección base \texttt{0x40021000}. Se utiliza \texttt{RCC\_APB2ENR} para habilitar
+    los relojes de los periféricos GPIOB, GPIOC y AFIO.
+    \item \texttt{AFIO}: Dirección base \texttt{0x40010000}. Se incorporan los registros \texttt{AFIO\_EXTICR1}
+    y \texttt{AFIO\_EXTICR4} para asociar los pines PB0 y PC15 a los canales EXTI0 y EXTI15 respectivamente.
+    \item \texttt{EXTI}: Dirección base \texttt{0x40010400}. Se emplean los registros de máscara de interrupción
+    (\texttt{EXTI\_IMR}), detección por flanco de bajada (\texttt{EXTI\_FTSR}) y el registro de petición pendiente
+    (\texttt{EXTI\_PR}) para limpiar el flag de interrupción.
+    \item \texttt{NVIC}: Se emplean los registros \texttt{NVIC\_ISER0} y \texttt{NVIC\_ISER1} para habilitar los
+    canales EXTI0 (IRQ 6) y EXTI15\_10 (IRQ 40), y los registros de prioridad \texttt{NVIC\_IPR1} y
+    \texttt{NVIC\_IPR10} para configurar sus prioridades relativas.
 \end{itemize}
 
 \subsubsection{Configuración Paso a Paso en la Función Principal}
 
 Dentro del ciclo de inicialización en la función \texttt{main()}, se ejecutan las siguientes acciones en secuencia:
 \begin{enumerate}
-    \item Habilitación del reloj de periféricos: Se configuran los bits 4 y 0 de \texttt{RCC\_APB2ENR} para
-    suministrar señal de reloj al puerto GPIOC y al periférico AFIO. Sin esta habilitación, cualquier escritura en los
-    registros de dichos módulos será ignorada por el hardware.
-    \item Configuración de PC13 y PC14 como salidas: Se limpian los campos de configuración en \texttt{GPIOC\_CRH} para
-    los pines 13 y 14, y se establece en ambos el valor \texttt{0x3} (modo salida de propósito general push-pull con una
-    velocidad máxima de conmutación de $50\MHz$). En el puerto PC13 se encuentra conectado el led interno y en el puerto
-    PC14 se conectará un led externo que será controlado mediante la interrupción externa.
-    \item Configuración de PC15 como entrada con Pull-up: Se configura el campo de control en
-    \texttt{GPIOC\_CRH} con el valor \texttt{0x8} (modo entrada con resistencia interna) y luego se escribe un '1' en el
-    bit 15 del registro \texttt{GPIOC\_ODR} para configurar dicha resistencia como pull-up. Esto mantiene el pin en un nivel
-    lógico alto por defecto, cayendo a nivel bajo al pulsar el botón conectado a tierra.
-    \item Asociación de la interrupción al Pin PC15: Se escribe el valor \texttt{0x2} en el registro
-    \texttt{AFIO\_EXTICR4} en el rango correspondiente a la línea 15. Esto le indica al multiplexor de interrupciones
-    del microcontrolador que la línea EXTI15 debe responder al Puerto C (donde se encuentra el pulsador).
-    \item Configuración de disparo de la interrupción externa: Se escribe un '1' en el bit 15 de
-    \texttt{EXTI\_FTSR} para detectar flancos descendentes. De esta manera, el evento de interrupción se disparará en el
-    instante exacto en el que el botón sea presionado.
-    \item Desenmascaramiento de la línea EXTI15: Se habilita la propagación de la señal escribiendo un '1'
-    en el bit 15 del registro de máscara \texttt{EXTI\_IMR}.
-    \item Activación en el NVIC: Se escribe un '1' en el bit 8 de \texttt{NVIC\_ISER1}. Como el canal EXTI15\_10 posee el
-    número de interrupción (IRQ) 40, este se activa mediante el bit 8 de la segunda palabra del registro de habilitación
-    del NVIC ($40 - 32 = 8$).
+    \item Habilitación del reloj de periféricos: Se configuran los bits 4, 3 y 0 de \texttt{RCC\_APB2ENR} para
+    suministrar señal de reloj a los puertos GPIOC, GPIOB y al módulo AFIO.
+    \item Configuración de PC13, PC14 y PB1 como salidas: Se establecen en modo push-pull de $50\MHz$.
+    PC13 y PC14 se configuran en el puerto C a través de \texttt{GPIOC\_CRH}, mientras que PB1 se
+    configura en el puerto B usando \texttt{GPIOB\_CRL}. PC13 controla el led interno, PC14 el led externo 1,
+    y PB1 el led externo 2.
+    \item Configuración de entradas con Pull-up: Se configura PC15 (Botón A) y PB0 (Botón B) en modo entrada con
+    resistencia interna escribiendo \texttt{0x8} en sus respectivos registros de configuración y estableciendo
+    en '1' los bits correspondientes en los registros de salida de datos (\texttt{GPIOx\_ODR}) para definir
+    las pull-up.
+    \item Asociación de interrupciones externas: Se escribe \texttt{0x2} en el campo EXTI15 de \texttt{AFIO\_EXTICR4}
+    y \texttt{0x1} en el campo EXTI0 de \texttt{AFIO\_EXTICR1} para direccionar los pines PC15 y PB0 a las líneas
+    de interrupción externa correspondientes.
+    \item Configuración del disparo y máscara: Se configuran los flancos descendentes escribiendo un '1' en los
+    bits 15 y 0 de \texttt{EXTI\_FTSR}, y se habilitan las líneas escribiendo en \texttt{EXTI\_IMR}.
+    \item Configuración de prioridades de interrupción: Para demostrar la anidación, se le asigna prioridad alta
+    ($0x40$) a EXTI15\_10 mediante el registro \texttt{NVIC\_IPR10}, y una prioridad menor ($0x80$) a EXTI0 a través
+    del registro \texttt{NVIC\_IPR1}.
+    \item Habilitación en el NVIC: Se escribe un '1' en el bit 6 de \texttt{NVIC\_ISER0} (para activar EXTI0) y en el
+    bit 8 de \texttt{NVIC\_ISER1} (para activar EXTI15\_10).
 \end{enumerate}
 
 Una vez completada la inicialización, la CPU ejecuta de forma ininterrumpida el bucle principal \texttt{while(1)},
 que alterna el estado del LED interno en PC13 mediante retardos por software (bucles vacíos de larga duración).
 
-\subsubsection{Rutina de Servicio de Interrupción (ISR)}
+\subsubsection{Rutina de Servicio de Interrupción (ISR) y Demostración de Prioridades}
 
-Cuando se produce un flanco descendente en el pin PC15, la CPU suspende la ejecución en el programa principal, almacena
-los registros de estado en la pila e ingresa a la ISR \texttt{EXTI15\_10\_IRQHandler}. Dentro de esta rutina:
+La demostración práctica del manejo de prioridades e interrupción anidada (preemption) se ejecuta al interactuar
+con las rutinas de servicio definidas en \texttt{main.c}:
+
+\begin{itemize}
+    \item \texttt{EXTI15\_10\_IRQHandler} (Prioridad Alta - 0x40): Al presionar el Botón A en PC15, se inicia un bucle
+    largo observable por hardware que hace parpadear el led externo 1 (PC14) rápidamente 15 veces seguidas mediante
+    un retraso por software.
+    \item \texttt{EXTI0\_IRQHandler} (Prioridad Baja - 0x80): Al presionar el Botón B en PB0, se inicia un bucle largo
+    similar que hace parpadear el led externo 2 (PB1) de manera rápida 15 veces seguidas.
+\end{itemize}
+
+El comportamiento observable del sistema valida de forma empírica la jerarquía de prioridades del NVIC:
 \begin{enumerate}
-    \item Se comprueba si la interrupción proviene de la línea 15 mediante la verificación del bit correspondiente en
-    la máscara de interrupción.
-    \item Se invierte el estado del LED externo en PC14 aplicando una operación XOR a nivel de bit sobre el registro \texttt{GPIOC\_ODR}.
-    \item Limpieza del flag de interrupción: Se escribe un '1' en el bit 15 del registro de estado \texttt{EXTI\_PR}. En el
-    controlador de interrupciones externas de la arquitectura STM32, la limpieza de las banderas pendientes se realiza por
-    software escribiendo un '1' en la posición correspondiente. Omitir este paso provocaría que, al salir de la ISR, el núcleo
-    detecte la interrupción como activa de forma permanente, volviendo a ejecutar la ISR de manera indefinida y bloqueando
-    el sistema.
+    \item Si se presiona el Botón B (baja prioridad), el led 2 en PB1 comienza a parpadear rápidamente.
+    \item Si durante este parpadeo se presiona el Botón A (alta prioridad), el NVIC suspende de inmediato la ejecución
+    de la ISR de menor prioridad y salta a \texttt{EXTI15\_10\_IRQHandler}. Esto se evidencia físicamente porque el
+    led 1 en PC14 comienza a parpadear de inmediato, pausando el parpadeo del led 2.
+    \item Al finalizar el parpadeo del led 1, el procesador retorna a la rutina de menor prioridad, reanudando
+    el parpadeo del led 2 en el punto exacto donde fue pausado.
+    \item Por el contrario, si se presiona primero el Botón A, el led 1 parpadea y cualquier pulsación del Botón B
+    no tiene efecto inmediato; la ISR de menor prioridad queda retenida en estado pendiente y solo comienza a
+    parpadear el led 2 una vez que el led 1 ha completado sus 15 destellos.
 \end{enumerate}
 
 \lstinputlisting[language={C}, caption={Código fuente principal e implementación de la ISR (\texttt{main.c}).}, label={list.ej1:main}]{sources/src/main.c}

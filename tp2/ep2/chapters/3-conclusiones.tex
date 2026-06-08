@@ -1,20 +1,23 @@
 \chapter{Conclusiones}
 \label{ch:conclusiones}
 
-Tras el análisis e implementación del Ejercicio Práctico N.o 1, se concluye que se han alcanzado satisfactoriamente
-los objetivos propuestos. La utilización de una interrupción externa gestionada a través del NVIC y el módulo EXTI
-ha permitido resolver de manera eficiente la detección y el procesamiento de eventos asíncronos (la pulsación del
-botón en PC15), rompiendo el flujo secuencial del programa principal sin requerir un muestreo periódico (polling).
+Tras el análisis, diseño e implementación del Ejercicio Práctico N° 2, se concluye que se han cumplido con éxito los
+objetivos propuestos. La configuración del periférico convertidor analógico-digital (ADC1) en un entorno Bare Metal ha
+permitido interactuar de manera directa con las señales analógicas del microcontrolador y procesar sus valores
+digitales equivalentes.
 
-El desarrollo en un entorno Bare Metal puro (sin sistemas operativos ni capas de abstracción complejas) ha resultado
-fundamental para comprender de manera profunda el comportamiento a bajo nivel de la arquitectura ARM Cortex-M3. La
-configuración manual de registros específicos como los de habilitación de reloj en el RCC, control de puertos GPIO,
-asociación de líneas en el AFIO, configuración de flancos en el EXTI, y activación en el NVIC proporciona un control
-absoluto sobre el hardware y optimiza el uso de recursos de memoria y CPU.
+El ejercicio demuestra la viabilidad de implementar sistemas de adquisición híbridos, donde la conversión de datos se
+realiza mediante muestreo activo (polling del bit \texttt{EOC}) para garantizar lecturas continuas e instantáneas,
+mientras que la conmutación de los canales de lectura se resuelve de manera asíncrona a través de una interrupción
+externa desencadenada por hardware (línea EXTI15). Esta combinación optimiza el tiempo de CPU al delegar la detección
+de eventos de control al controlador de interrupciones (NVIC).
 
-Asimismo, la implementación de la tabla de vectores en el archivo de inicio en ensamblador y la definición exacta de la
-distribución física en el script de enlazado ponen de manifiesto la estrecha relación que existe entre el software
-desarrollado y la estructura del hardware subyacente. Se constata la vital importancia de limpiar el flag pendiente
-de interrupción en el registro correspondiente antes de finalizar la rutina de servicio, ya que la omisión de este
-paso invalida el comportamiento esperado del microcontrolador al generar bucles infinitos de atención.
+Por otro lado, la utilización del sensor de temperatura interno resalta la importancia de los periféricos embebidos
+para el diagnóstico y seguridad del chip. El procesamiento de sus valores mediante aproximaciones matemáticas basadas
+en aritmética entera demuestra ser una práctica de optimización crucial en firmware para sistemas embebidos de recursos
+limitados, evitando la inclusión de costosas bibliotecas de punto flotante.
 
+Finalmente, el diseño de la interfaz visual mediante una escala en la barra de 5 LEDs externos permite comprobar de
+forma empírica y en tiempo real las variaciones de temperatura y el comportamiento lineal del potenciómetro de entrada.
+Este desarrollo proporciona los fundamentos de adquisición analógica necesarios para abordar implementaciones más
+complejas en etapas posteriores de este trabajo práctico.

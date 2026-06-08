@@ -1,30 +1,15 @@
 \chapter{Introducción}
 \label{ch:introduccion}
 
-Este informe técnico documenta el desarrollo y la resolución del Ejercicio Práctico N.o 1 del Trabajo Práctico Nro 2
-de la materia Técnicas Digitales II. Las actividades propuestas se llevan a cabo sobre la placa de desarrollo
-BluePill, la cual incorpora un microcontrolador STM32F103C8T6 basado en el núcleo ARM Cortex-M3. El enfoque de
-programación implementado es Bare Metal puro, interactuando de forma directa con los registros de los periféricos a
-través de punteros de memoria.
+Este informe documenta el desarrollo y la resolución del Ejercicio Práctico N° 2 del Trabajo Práctico N° 2.
+Las actividades propuestas en esta etapa tienen como objetivo principal
+estudiar y comprender la configuración y puesta en marcha del convertidor analógico-digital (ADC1) en el
+microcontrolador STM32F103C8T6 bajo un esquema de programación Bare Metal puro.
 
-La guía de trabajos prácticos plantea una serie de cinco ejercicios orientados a comprender el funcionamiento y
-configuración de diversos módulos del microcontrolador:
-
-\begin{enumerate}
-    \item Ejercicio Práctico N.o 1 (Interrupciones Externas y el NVIC): Configuración del controlador de
-    interrupciones vectorizadas y anidadas (NVIC) para gestionar eventos asíncronos provenientes de un pin de
-    entrada (botón) mediante interrupción externa (EXTI), modificando el estado de un LED.
-    \item Ejercicio Práctico N.o 2 (Conversión Analógica-Digital): Configuración del ADC para la lectura
-    del sensor de temperatura interno y de un canal analógico externo.
-    \item Ejercicio Práctico N.o 3 (Migración a CMSIS y Gestión de Tiempos): Incorporación del estándar
-    CMSIS para mejorar la legibilidad y uso del temporizador del sistema (SysTick) para generar retardos precisos.
-    \item Ejercicio Práctico N.o 4 (Comunicación Serie UART): Establecimiento de comunicación
-    bidireccional con una PC mediante el periférico USART para la transmisión de estados y recepción de comandos.
-    \item Ejercicio Práctico N.o 5 (Control de Potencia con Timers): Generación de señales de modulación por
-    ancho de pulso (PWM) empleando los temporizadores de propósito general para variar la intensidad lumínica.
-\end{enumerate}
-
-Cabe destacar que el presente documento aborda de manera exclusiva la resolución del Ejercicio Práctico N.o 1. Los
-ejercicios subsiguientes (del 2 al 5) se desarrollarán de forma progresiva en futuros informes. El objetivo principal
-de esta primera etapa consiste en comprender la tabla de vectores de interrupción, el funcionamiento de la línea EXTI
-y la habilitación de interrupciones en el NVIC sin utilizar bibliotecas de alto nivel.
+El propósito general de este ejercicio es implementar la adquisición de señales analógicas y su posterior
+procesamiento digital. Para ello, se busca comprender el funcionamiento del periférico de conversión, la
+configuración de canales múltiples, el establecimiento de tiempos de muestreo y factores de escala, y la
+representación de las mediciones obtenidas, la cual se logra mediante el uso de
+5 LEDs. A su vez, se integra el control de eventos por hardware
+para alternar dinámicamente entre las fuentes de señal de entrada, vinculando las técnicas de interrupciones
+externas estudiadas en el ejercicio anterior con los métodos de muestreo de este periférico.

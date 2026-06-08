@@ -27,7 +27,7 @@ SECTIONS
     *(.rodata*)
   } > FLASH
 
-  /* Direcciones de control para variables globales (en caso de usarse en el futuro) */
+  /* Direcciones de control para variables globales */
   _sidata = LOADADDR(.data);
 
   .data :

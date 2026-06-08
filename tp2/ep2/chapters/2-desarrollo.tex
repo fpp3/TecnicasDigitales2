@@ -1,154 +1,163 @@
 \chapter{Desarrollo}
 \label{ch:desarrollo}
 
-En este capítulo se detalla la resolución técnica del primer ejercicio práctico, correspondiente al diseño e
-implementación del sistema de gestión de interrupciones externas utilizando la placa BluePill en un entorno Bare Metal.
+Como se mencióno en la introducción de este informe, el desarrollo de este ejercicio práctico consiste en la implementación de un sistema de adquisición analógico
+con visualización adaptativa y control de selección por hardware. Para ello, se conecta un potenciómetro en el
+puerto PA0 configurado como entrada analógica al periférico ADC1. Por otro lado, los puertos PA1 al PA5 se disponen
+como salidas digitales para controlar una barra de cinco leds externos. 
 
-\section{Ejercicio Práctico N1: interrupciones externas y el NVIC}
-\label{sec.ej1:interrupciones}
-
-El objetivo de este ejercicio consiste en configurar el microcontrolador STM32F103C8T6 para que el LED de depuración
-interno (conectado al pin PC13) permanezca parpadeando periódicamente en el bucle principal, mientras que un pulsador
-(conectado al pin PC15) modifica de forma asíncrona, mediante interrupción externa, el estado de un LED externo
-(conectado al pin PC14).
-
-Para llevar a cabo la resolución de este ejercicio práctico, el proyecto se divide en tres archivos fundamentales: el
-código de arranque en ensamblador (\texttt{crt.s}), el script de enlazado (\texttt{linker.ld}) y el código fuente
-principal en C (\texttt{main.c}). A continuación, se detalla el análisis de cada uno de ellos y la relación funcional
-que existe entre sí.
-
-\subsection{Archivo de Inicialización y Tabla de Vectores}
-\label{sec.ej1:inicializacion}
-
-El archivo \texttt{crt.s}, cuyo código se expone en el listado~\ref{list.ej1:crt}, representa el código de inicio (startup)
-del sistema. Al energizar el microcontrolador, la CPU del Cortex-M3 inicializa el puntero de pila (Stack Pointer) con el
-valor ubicado en la dirección de memoria \texttt{0x08000000} (inicio de la memoria FLASH) y salta a la dirección del vector
-de reinicio (Reset Vector) ubicada en \texttt{0x08000004}.
-
-En este archivo se define la sección \texttt{.isr\_vector}, la cual contiene la tabla de vectores de interrupción requerida por
-la arquitectura ARM Cortex-M3~\cite{cortexm3trm}. Las primeras posiciones corresponden a excepciones internas del núcleo (Reset, NMI y Hard Fault).
-Las posiciones del núcleo restantes (de la 4 a la 15) se rellenan con ceros mediante la directiva \texttt{.rept 12}, ya que no
-son utilizadas en esta aplicación.
-
-A continuación de las excepciones del núcleo, se posicionan los vectores de interrupción específicos de los periféricos de
-la placa STM32. La interrupción asociada a las líneas externas EXTI15 a EXTI10 corresponde a la posición física 40 de la tabla
-de periféricos (posición 56 en la tabla global, considerando los 16 vectores del núcleo). Por lo tanto, se agregan 40 palabras
-en cero utilizando \texttt{.rept 40} para ocupar los espacios de los periféricos anteriores y, finalmente, se registra la
-función \texttt{EXTI15\_10\_IRQHandler} en la posición 56.
-
-El punto de entrada físico del firmware es el manejador de reset \texttt{\_reset}, el cual llama a la función principal en C
-mediante la instrucción de ramificación con enlace \texttt{bl main}. Si la función principal retornara, el microcontrolador
-quedaría en un bucle infinito para evitar comportamientos erráticos.
-
-\lstinputlisting[language={[x86masm]Assembler}, caption={Archivo de inicialización y tabla de vectores (\texttt{crt.s}).}, label={list.ej1:crt}]{sources/ep1/src/crt.s}
-
-\subsection{Script de Enlazado}
-\label{sec.ej1:enlazador}
-
-El archivo \texttt{linker.ld}, presentado en el listado~\ref{list.ej1:linker}, es el script de configuración del enlazador
-(GNU Linker). Su función principal es indicar cómo deben distribuirse las secciones de código y datos dentro del espacio de
-direcciones de memoria del microcontrolador.
-
-En primer lugar, define el bloque \texttt{MEMORY}, especificando que el chip STM32F103C8T6 posee una memoria FLASH de lectura
-y ejecución (\texttt{rx}) de $64\kB$ con origen en \texttt{0x08000000}, y una memoria RAM de lectura, escritura y ejecución
-(\texttt{xrw}) de $20\kB$ con origen en \texttt{0x20000000}.
-
-El símbolo \texttt{\_esstack} se calcula sumando el origen de la RAM con su longitud, apuntando así a la última posición de la
-memoria RAM (pila invertida o descendente). Este símbolo es exportado y consumido directamente en la primera posición de la
-tabla de vectores en \texttt{crt.s}.
-
-Dentro del bloque \texttt{SECTIONS}, la directiva \texttt{KEEP(*(.isr\_vector))} asegura que la sección de la tabla de vectores
-de interrupción no sea eliminada por optimizaciones del compilador y que se ubique de manera obligatoria al principio de la
-memoria FLASH. Posteriormente, se disponen las secciones de código y constantes (\texttt{.text} y \texttt{.rodata}) en la FLASH,
-mientras que las secciones de variables globales (\texttt{.data} y \texttt{.bss}) se mapean para su uso en la RAM.
-
-\lstinputlisting[caption={Script de enlazado de memoria (\texttt{linker.ld}).}, label={list.ej1:linker}]{sources/ep1/src/linker.ld}
-
-\subsection{Código Fuente Principal en C}
-\label{sec.ej1:codigo_c}
-
-El archivo \texttt{main.c}, expuesto en el listado~\ref{list.ej1:main}, implementa la inicialización de los registros
-de control y la rutina de servicio para procesar las interrupciones externas. Al no contar con los archivos de cabecera estándar del fabricante,
-se definen de manera explícita las direcciones físicas de los periféricos basándose en el manual de referencia~\cite{stm32f103rm}.
-
-\subsubsection{Mapeo de Registros}
-
+El comportamiento del sistema está gobernado por un botón pulsador conectado al puerto PC15, el cual está configurado
+para disparar una interrupción externa (EXTI). Esta interrupción conmuta dinámicamente entre dos modos de
+visualización en la barra de leds:
 \begin{itemize}
-    \item \texttt{GPIOC}: Con dirección base en \texttt{0x40011000}, define los registros \texttt{GPIOC\_CRL} y
-    \texttt{GPIOC\_CRH} para configurar el modo de funcionamiento de los pines, \texttt{GPIOC\_ODR} para manejar
-    la salida de datos o las resistencias de pull-up/pull-down internas, y \texttt{GPIOC\_BSRR} para modificar
-    estados de pines de forma atómica.
-    \item \texttt{RCC}: Dirección base \texttt{0x40021000}. El registro \texttt{RCC\_APB2ENR} permite habilitar el
-    reloj de los periféricos conectados al bus APB2 (en este caso, el puerto C y el módulo de funciones alternas AFIO).
-    \item \texttt{AFIO}: Dirección base \texttt{0x40010000}. El registro \texttt{AFIO\_EXTICR4} configura qué puerto
-    físico se asocia a las líneas de interrupción externa de la 12 a la 15.
-    \item \texttt{EXTI}: Dirección base \texttt{0x40010400}. Contiene registros como \texttt{EXTI\_IMR} (máscara
-    de interrupciones), \texttt{EXTI\_FTSR} (detección por flanco de bajada) y \texttt{EXTI\_PR} (registro de
-    petición pendiente).
-    \item \texttt{NVIC}: Se accede al registro de habilitación del núcleo ARM Cortex-M3 en la dirección
-    \texttt{0xE000E104} (\texttt{NVIC\_ISER1}) para controlar el estado del canal EXTI15\_10.
+    \item La tensión medida en el potenciómetro externo mediante el canal 0 del ADC.
+    \item La temperatura medida por el sensor interno del microcontrolador (canal 16 del ADC1),
+    calculada mediante expresiones aritméticas de precisión entera.
 \end{itemize}
 
-\subsubsection{Configuración Paso a Paso en la Función Principal}
+Adicionalmente, se mantiene un led testigo interno parpadeando en el puerto PC13 como indicador de que el bucle
+principal se ejecuta sin bloqueos. A continuación, se detalla la configuración a nivel de registros y la estructura
+del firmware implementado.
 
-Dentro del ciclo de inicialización en la función \texttt{main()}, se ejecutan las siguientes acciones en secuencia:
+\section{Archivo de Inicialización y Script de Enlazado}
+\label{sec.ej2:inicializacion}
+
+Tanto el archivo de arranque en ensamblador \texttt{crt.s} como el script de enlazado \texttt{linker.ld} no sufrieron
+ningún tipo de modificación respecto a la implementación detallada en el Ejercicio Práctico N° 1. Por este motivo,
+y con el objeto de evitar redundancia de información, se omiten sus listados y explicaciones en este informe,
+remitiéndose al lector al desarrollo previo.
+
+\section{Código Fuente Principal en C}
+\label{sec.ej2:codigo_c}
+
+El archivo \texttt{main.c}, presentado en el listado~\ref{list.ej2:main}, implementa la lógica completa de este
+ejercicio, incluyendo el mapeo de registros, la configuración del reloj del sistema y los periféricos implicados.
+
+\lstinputlisting[language={C}, caption={Código fuente principal e implementación de conversión ADC (\texttt{main.c}).}, label={list.ej2:main}]{sources/src/main.c}
+
+\subsection{Mapeo de Registros Adicionales}
+
+Con respecto al ejercicio anterior, se incorporan las constantes simbólicas necesarias para acceder a los siguientes
+periféricos y registros:
+\begin{itemize}
+    \item \texttt{GPIOA}: Dirección base \texttt{0x40010800}. Se definen los registros \texttt{GPIOA\_CRL} para la
+    configuración de pines bajos (0-7), y \texttt{GPIOA\_BSRR} para modificar de forma atómica sus estados de salida.
+    \item \texttt{RCC\_CFGR}: Registro de configuración de reloj en la dirección \texttt{0x40021004}, utilizado para
+    establecer el factor de división del reloj del ADC.
+    \item \texttt{ADC1}: Dirección base \texttt{0x40012400}. Se accede a \texttt{ADC\_SR} (registro de estado),
+    \texttt{ADC\_CR1} y \texttt{ADC\_CR2} (registros de control), \texttt{ADC\_SMPR1} y \texttt{ADC\_SMPR2} (tiempos
+    de muestreo), \texttt{ADC\_SQR3} (secuencia de conversión regular) y \texttt{ADC\_DT} (registro de datos).
+\end{itemize}
+
+\subsection{Configuración de Relojes y Prescaler del ADC}
+
+La frecuencia de reloj del periférico ADC en la arquitectura STM32F103C8T6 no debe superar el valor de $14\MHz$ para
+garantizar la precisión de las conversiones~\cite{stm32f103rm}.
+
+Para cumplir con este requisito, se accede al registro \texttt{RCC\_CFGR} y se configuran los bits de división del
+reloj del ADC (\texttt{ADCPRE}, bits 14-15) escribiendo la constante binaria \texttt{0b10}. Esto aplica un factor de
+división por 6 sobre la frecuencia de reloj del bus APB2. Con un oscilador interno de $8\MHz$, la frecuencia de trabajo
+del ADC se establece en $1.33\MHz$, cumpliendo de forma holgada el límite del fabricante.
+
+\subsection{Configuración de los Puertos GPIO}
+
+Para posibilitar la interfaz física y el control del ADC1, se requiere la configuración de diversos pines
+de entrada y salida de propósito general. La distribución de estas conexiones en el laboratorio sobre la protoboard
+se ilustra en la figura~\ref{fig.ej2:proto}, y consta de los siguientes periféricos:
+
+\begin{itemize}
+    \item Leds de barra (Salidas): Los pines PA1, PA2, PA3, PA4 y PA5 se configuran como salidas digitales push-pull
+    con una velocidad máxima de conmutación de $50\MHz$. Esto se logra escribiendo el valor de control \texttt{0x3} en
+    sus respectivos campos del registro \texttt{GPIOA\_CRL}.
+    \item Potenciómetro (Entrada analógica): El pin PA0 se configura en modo de entrada analógica escribiendo la constante
+    \texttt{0x0} en su campo correspondiente en \texttt{GPIOA\_CRL}. De esta forma, el circuito integrado de entrada digital
+    se deshabilita para evitar consumos adicionales y asegurar que el nivel analógico de tensión llegue directamente
+    al ADC1 sin perturbaciones.
+    \item Botón de interrupción (Entrada digital): El pin PC15 se configura como entrada digital con resistencia interna
+    de pull-up. Esto se realiza escribiendo la constante \texttt{0x8} en el campo correspondiente en el registro
+    \texttt{GPIOC\_CRH} y estableciendo en '1' el bit 15 de \texttt{GPIOC\_ODR}.
+    \item Led de parpadeo interno (Salida): El pin PC13 se configura en modo salida push-pull a $50\MHz$ escribiendo
+    \texttt{0x3} en su campo de \texttt{GPIOC\_CRH}.
+\end{itemize}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/proto.jpeg}
+    \caption{Disposición del circuito en protoboard para el Ejercicio Práctico N° 2.}
+    \label{fig.ej2:proto}
+\end{figure}
+
+\subsection{Inicialización y Calibración del ADC}
+
+Para poner en marcha el ADC de forma precisa, se siguen los siguientes pasos en la función \texttt{main()}:
 \begin{enumerate}
-    \item Habilitación del reloj de periféricos: Se configuran los bits 4 y 0 de \texttt{RCC\_APB2ENR} para
-    suministrar señal de reloj al puerto GPIOC y al periférico AFIO. Sin esta habilitación, cualquier escritura en los
-    registros de dichos módulos será ignorada por el hardware.
-    \item Configuración de PC13 y PC14 como salidas: Se limpian los campos de configuración en \texttt{GPIOC\_CRH} para
-    los pines 13 y 14, y se establece en ambos el valor \texttt{0x3} (modo salida de propósito general push-pull con una
-    velocidad máxima de conmutación de $50\MHz$). En el puerto PC13 se encuentra conectado el led interno y en el puerto
-    PC14 se conectará un led externo que será controlado mediante la interrupción externa.
-    \item Configuración de PC15 como entrada con Pull-up: Se configura el campo de control en
-    \texttt{GPIOC\_CRH} con el valor \texttt{0x8} (modo entrada con resistencia interna) y luego se escribe un '1' en el
-    bit 15 del registro \texttt{GPIOC\_ODR} para configurar dicha resistencia como pull-up. Esto mantiene el pin en un nivel
-    lógico alto por defecto, cayendo a nivel bajo al pulsar el botón conectado a tierra.
-    \item Asociación de la interrupción al Pin PC15: Se escribe el valor \texttt{0x2} en el registro
-    \texttt{AFIO\_EXTICR4} en el rango correspondiente a la línea 15. Esto le indica al multiplexor de interrupciones
-    del microcontrolador que la línea EXTI15 debe responder al Puerto C (donde se encuentra el pulsador).
-    \item Configuración de disparo de la interrupción externa: Se escribe un '1' en el bit 15 de
-    \texttt{EXTI\_FTSR} para detectar flancos descendentes. De esta manera, el evento de interrupción se disparará en el
-    instante exacto en el que el botón sea presionado.
-    \item Desenmascaramiento de la línea EXTI15: Se habilita la propagación de la señal escribiendo un '1'
-    en el bit 15 del registro de máscara \texttt{EXTI\_IMR}.
-    \item Activación en el NVIC: Se escribe un '1' en el bit 8 de \texttt{NVIC\_ISER1}. Como el canal EXTI15\_10 posee el
-    número de interrupción (IRQ) 40, este se activa mediante el bit 8 de la segunda palabra del registro de habilitación
-    del NVIC ($40 - 32 = 8$).
+    \item Tiempos de muestreo: El sensor de temperatura interno requiere un tiempo de muestreo mínimo de
+    $17.1\us$~\cite{stm32f103rm} para cargar de forma correcta la capacitancia del circuito interno de retención. Se
+    escribe \texttt{0x7} en los bits 18-20 del registro \texttt{ADC\_SMPR1} para configurar el máximo tiempo de
+    muestreo disponible ($239.5$ ciclos de reloj de ADC). Del mismo modo, se configura el canal 0 en \texttt{ADC\_SMPR2}
+    con $239.5$ ciclos para la señal del potenciómetro externo.
+    \item Activación de sensores internos y alimentación: Se escribe un '1' en el bit 23 (\texttt{TSVREFE})
+    del registro \texttt{ADC\_CR2} para encender el sensor de temperatura. Se configuran los bits 17-19 de
+    \texttt{ADC\_CR2} como \texttt{0b111} (\texttt{EXTSEL = SWSTART}) y el bit 20 como '1' (\texttt{EXTTRIG = 1}) para
+    habilitar el inicio de la conversión por software a través del evento \texttt{SWSTART}. Posteriormente, se escribe
+    un '1' en el bit 0 (\texttt{ADON}) de \texttt{ADC\_CR2} para alimentar el periférico.
+    \item Calibración: Se genera un retardo por software corto para esperar la estabilización del circuito de
+    conversión analógico. Luego, se escribe un '1' en el bit 2 (\texttt{CAL}) de \texttt{ADC\_CR2}. El hardware del
+    STM32 ejecuta de forma automática una rutina para compensar los errores de desviación (offset) internos, y limpia
+    el bit cuando el proceso finaliza. El código realiza una espera activa sobre este bit.
 \end{enumerate}
 
-Una vez completada la inicialización, la CPU ejecuta de forma ininterrumpida el bucle principal \texttt{while(1)},
-que alterna el estado del LED interno en PC13 mediante retardos por software (bucles vacíos de larga duración).
+\subsection{Lógica de Conversión por Muestreo (Polling)}
 
-\subsubsection{Rutina de Servicio de Interrupción (ISR)}
-
-Cuando se produce un flanco descendente en el pin PC15, la CPU suspende la ejecución en el programa principal, almacena
-los registros de estado en la pila e ingresa a la ISR \texttt{EXTI15\_10\_IRQHandler}. Dentro de esta rutina:
+Dentro del bucle de ejecución principal \texttt{while(1)}, se realiza el siguiente ciclo para procesar la conversión:
 \begin{enumerate}
-    \item Se comprueba si la interrupción proviene de la línea 15 mediante la verificación del bit correspondiente en
-    la máscara de interrupción.
-    \item Se invierte el estado del LED externo en PC14 aplicando una operación XOR a nivel de bit sobre el registro \texttt{GPIOC\_ODR}.
-    \item Limpieza del flag de interrupción: Se escribe un '1' en el bit 15 del registro de estado \texttt{EXTI\_PR}. En el
-    controlador de interrupciones externas de la arquitectura STM32, la limpieza de las banderas pendientes se realiza por
-    software escribiendo un '1' en la posición correspondiente. Omitir este paso provocaría que, al salir de la ISR, el núcleo
-    detecte la interrupción como activa de forma permanente, volviendo a ejecutar la ISR de manera indefinida y bloqueando
-    el sistema.
+    \item Selección de Canal: Se verifica la variable global \texttt{channel\_mode} gestionada por la ISR.
+    Si su valor es 0, se escribe el valor 16 (canal de temperatura) en el registro de secuencia \texttt{ADC\_SQR3}. Si es 1,
+    se escribe el valor 0 (canal externo del potenciómetro).
+    \item Disparo de Conversión: Se escribe un '1' en el bit 22 (\texttt{SWSTART}) de \texttt{ADC\_CR2} para
+    niciar la adquisición de la muestra.
+    \item Espera de Fin de Conversión (EOC): El firmware permanece en un bucle \texttt{while} esperando que el
+    hardware establezca en '1' el bit 1 del registro de estado \texttt{ADC\_SR} (\texttt{EOC}, End of Conversion).
+    \item Lectura de Datos: Una vez finalizada la conversión, se lee el registro \texttt{ADC\_DT} y se aplica
+    una máscara para obtener la palabra de 12 bits resultante (rango de 0 a 4095).
 \end{enumerate}
 
-\lstinputlisting[language={C}, caption={Código fuente principal e implementación de la ISR (\texttt{main.c}).}, label={list.ej1:main}]{sources/ep1/src/main.c}
+\subsection{Procesamiento de Datos y Visualización}
 
-\subsection{Relación y Flujo de Ejecución entre los Componentes}
-\label{sec.ej1:relacion}
+Si el canal activo es el potenciómetro externo (valores de 0 a 4095), el valor digital se divide en cinco rangos
+equitativos mediante condicionales lógicos para activar una cantidad proporcional de LEDs mediante la función
+\texttt{set\_leds(count)}.
 
-La interacción de los tres archivos de desarrollo analizados conforma la base necesaria para la correcta ejecución
-en Bare Metal:
+Si el canal activo es el sensor de temperatura interno, el firmware realiza el cálculo de la temperatura empleando
+aritmética entera para evitar el uso de funciones de punto flotante de alto costo en microcontroladores. 
+La tensión medida en milivoltios se determina como:
+\begin{equation}
+    V_{SENSE} = \frac{ADC_{VAL} \times 3300\mV}{4095}
+    \label{eq.ej2:vsense}
+\end{equation}
+
+Posteriormente, utilizando los parámetros provistos por la hoja de datos ($V_{25} = 1.43\V$ y pendiente típica de
+$4.3\mV/\Celsius$), se calcula la temperatura en décimas de grado Celsius mediante la expresión:
+\begin{equation}
+    T\Celsius = \frac{1430\mV - V_{SENSE}}{4.3\mV/\Celsius} + 25\Celsius
+    \label{eq.ej2:temp}
+\end{equation}
+
+El valor calculado se compara para activar la barra de LEDs con una escala adaptada al rango normal de funcionamiento
+de la placa de desarrollo (desde menos de $26\Celsius$ hasta más de $38\Celsius$).
+
+\section{Relación entre Archivos de Desarrollo}
+\label{sec.ej2:relacion}
+
+La interacción del firmware se define de la siguiente manera:
 \begin{enumerate}
-    \item El archivo de enlazado (\texttt{linker.ld}) asigna de manera rígida los límites de la memoria física y
-    establece que la tabla de vectores definida en \texttt{crt.s} comience exactamente en la posición \texttt{0x08000000}.
-    \item El código en ensamblador (\texttt{crt.s}) posiciona la dirección física de la rutina
-    \texttt{EXTI15\_10\_}\allowbreak\texttt{IRQHandler} en el vector número 40 del NVIC (posición 56 de la tabla).
-    \item Durante la compilación y el enlace, el compilador traduce la función definida en \texttt{main.c} en una
-    dirección física de memoria, la cual el enlazador copia en el vector asignado dentro de la tabla de interrupciones.
-    \item Cuando la interrupción física se produce en el microcontrolador, el NVIC consulta la dirección de memoria
-    asociada al vector 40 en la FLASH y salta hacia la función implementada en C, logrando la interacción asíncrona.
+    \item La distribución del espacio de memoria establecida en \texttt{linker.ld} ubica el vector de interrupción
+    externa apuntando a la dirección física del manejador \texttt{EXTI15\_10\_}\allowbreak\texttt{IRQHandler}.
+    \item Al presionar el pulsador externo en PC15, se genera un flanco descendente que dispara la interrupción. El
+    procesamiento de la ISR en \texttt{main.c} alterna el valor de la variable \texttt{channel\_mode} y limpia
+    la bandera de interrupción en \texttt{EXTI\_PR}.
+    \item El bucle principal lee de forma continua la variable \texttt{channel\_mode} y conmuta el registro
+    \texttt{ADC\_SQR3} para iniciar la conversión en el canal correspondiente.
+    \item Los resultados de la conversión modifican los estados del puerto \texttt{GPIOA} a través de la función
+    \texttt{set\_leds}, variando la visualización en la barra de 5 LEDs de forma asíncrona a la pulsación.
 \end{enumerate}

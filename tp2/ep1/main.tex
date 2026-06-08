@@ -45,10 +45,37 @@
   title=\lstname
 }
 
+\lstdefinelanguage{ARM-Assembly}{
+  keywords={b, bl, bx, blx, ldr, str, mov, add, sub, cmp},
+  keywordstyle=\color{blue},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{mygreen},
+  string=[b]",
+  stringstyle=\color{mymauve},
+  alsoletter={.},
+  morekeywords=[2]{.syntax, .cpu, .thumb, .extern, .section, .weak, .thumb_func, .thumb_set, .word, .rept, .endr, .global},
+  keywordstyle=[2]\color{mymauve}
+}
+
+\lstdefinelanguage{LinkerScript}{
+  keywords={MEMORY, SECTIONS, KEEP, ORIGIN, LENGTH, ALIGN, ENTRY, PROVIDE, LOADADDR, AT},
+  keywordstyle=\color{blue},
+  sensitive=true,
+  comment=[s]{/*}{*/},
+  commentstyle=\color{mygreen},
+  string=[b]",
+  stringstyle=\color{mymauve},
+  otherkeywords={},
+  escapeinside={}
+}
+
+
 % Metadatos
 \materia{Técnicas Digitales II}
-\titulo{Trabajo práctico N2: programación de la placa BluePill en BareMetal}
-\subtitulo{Ejercicio Práctico N1: interrupciones externas y el NVIC}
+\titulo{Trabajo práctico N°2: programación de la placa BluePill en BareMetal}
+\subtitulo{Ejercicio Práctico N°1: interrupciones externas y el NVIC}
 \comision{4R2}
 \autores{Gastón Grasso 401892\\ Franco Palombo 401910\\ Angelo Prieto 401012}
 \fecha{\today}
