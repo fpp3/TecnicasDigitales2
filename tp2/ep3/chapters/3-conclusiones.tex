@@ -1,0 +1,20 @@
+\chapter{Conclusiones}
+\label{ch:conclusiones}
+
+El desarrollo del Ejercicio Práctico N° 3 ha permitido validar empíricamente las ventajas de migrar
+un desarrollo \textit{Bare Metal} puro hacia el estándar de abstracción de hardware CMSIS en microcontroladores
+de arquitectura ARM Cortex-M.
+
+Se logró portar la totalidad del código fuente —incluyendo la inicialización del reloj, la configuración
+de los puertos GPIO, la parametrización de interrupciones externas (EXTI/NVIC) y la gestión del
+convertidor analógico-digital (ADC1)— sustituyendo el uso riesgoso de punteros directos a memoria
+por el empleo sistemático de estructuras \lstinline{struct} tipadas e identificadores mnemotécnicos. 
+Esta transición no solo previene errores de direccionamiento originados por errores en el cálculo
+de los desplazamientos (\textit{offsets}), sino que mejora significativamente la legibilidad, escalabilidad
+y mantenimiento del firmware.
+
+Adicionalmente, la implementación del temporizador \textit{SysTick} permitió erradicar los retardos
+empíricos por bucles bloqueantes de software. La base de tiempo precisa y determinista de \qty{1}{\ms}
+alcanzada demuestra la potencia de integrar periféricos internos del núcleo para tareas de temporización,
+liberando al procesador de cálculos inexactos, optimizando la confiabilidad del sistema ante variaciones
+en la frecuencia del reloj, e incrementando el estándar general del código del proyecto.

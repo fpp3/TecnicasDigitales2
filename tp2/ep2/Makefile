@@ -1,6 +1,7 @@
-MATERIA := $(notdir $(abspath $(CURDIR)/..))
-TP := $(notdir $(CURDIR))
-OUTPUT_NAME := $(MATERIA)_$(TP)
+MATERIA := $(notdir $(abspath $(CURDIR)/../..))
+TP := $(notdir $(abspath $(CURDIR)/..))
+EP := $(notdir $(CURDIR))
+OUTPUT_NAME := $(MATERIA)_$(TP)_$(EP)
 
 SRC := main.tex
 

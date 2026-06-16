@@ -1,0 +1,14 @@
+\chapter{Introducción}
+\label{ch:introduccion}
+
+Este informe documenta el desarrollo y la resolución del Ejercicio Práctico N° 3 del Trabajo Práctico N° 2.
+Las actividades propuestas en esta etapa tienen como objetivo principal abandonar el uso de punteros
+manuales de hardware (Bare Metal puro) y migrar la base de código existente hacia el estándar CMSIS
+(Cortex Microcontroller Software Interface Standard).
+
+El propósito general de este ejercicio es adaptar el código del Ejercicio N° 2, el cual configura
+interrupciones externas, canales del ADC, y la interfaz GPIO, para utilizar las estructuras y macros
+definidas en \lstinline{stm32f103xb.h}. Esto permite un desarrollo más robusto, una mejora significativa en la
+legibilidad del código y una mayor facilidad de mantenimiento. Adicionalmente, se reemplaza el retardo
+basado en bucles (\textit{software delay}) por una solución determinista por hardware, configurando el periférico
+interno del núcleo Cortex-M3 denominado \textit{SysTick} para generar retardos precisos de \qty{1}{\ms}.

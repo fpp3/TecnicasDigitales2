@@ -1,0 +1,86 @@
+\chapter{Desarrollo}
+\label{ch:desarrollo}
+
+Como se mencionó en la introducción, el desarrollo de este ejercicio práctico consiste en la migración del
+código empleado en el Ejercicio N° 2 hacia el estándar CMSIS, y la incorporación de una gestión de tiempos
+precisa utilizando el temporizador de sistema (\textit{SysTick}). El comportamiento general del firmware —lectura
+del ADC, manejo de interrupciones externas y control de una barra de LEDs— se mantiene inalterado, pero la forma
+en la que se interactúa con el hardware subyacente se modifica por completo.
+
+A continuación, se detallan los aspectos clave de la refactorización del código, el uso de las estructuras
+provistas por el estándar, y la configuración del temporizador de sistema.
+
+\section{Migración a la Biblioteca CMSIS}
+\label{sec.ej3:cmsis}
+
+El estándar CMSIS proporciona una capa de abstracción de hardware (HAL) independiente del fabricante para los
+núcleos de procesador Cortex-M. Al incluir la cabecera \lstinline{stm32f103xb.h}, se tiene acceso a una
+definición exhaustiva y estandarizada del mapa de memoria del microcontrolador.
+
+\subsection{Uso de Estructuras y Punteros Tipados}
+
+En la implementación anterior (\textit{Bare Metal puro}), el acceso a los registros de periféricos se
+realizaba mediante la definición manual de macros y el casteo directo de direcciones de memoria a
+punteros enteros volátiles (\lstinline{*(volatile uint32_t *) 0x40010800}). Este enfoque es propenso a
+errores de direccionamiento y dificulta la comprensión del código.
+
+Con la adopción de CMSIS, los registros de los periféricos se agrupan lógicamente en estructuras
+de lenguaje C (\lstinline{struct}). Por ejemplo, el periférico GPIO se define a través del tipo de
+dato \lstinline{GPIO_TypeDef}. Esta estructura contiene miembros que representan exactamente los registros
+disponibles (\lstinline{CRL}, \lstinline{CRH}, \lstinline{ODR}, \lstinline{BSRR}, etc.), ubicados
+secuencialmente en la memoria según el desplazamiento especificado en la hoja de datos.
+
+El acceso a un puerto específico se realiza a través de un puntero predefinido que apunta a la dirección
+base del periférico en el mapa de memoria. De esta forma, configurar el puerto A es tan legible como:
+\begin{lstlisting}[language=C]
+GPIOA->CRL |= GPIO_CRL_MODE1_0 | GPIO_CRL_MODE1_1;
+\end{lstlisting}
+
+Este paradigma garantiza que el compilador verifique los tipos de datos y los desplazamientos, brindando
+mayor seguridad en tiempo de compilación.
+
+\subsection{Uso de Máscaras Predefinidas}
+
+Otra ventaja significativa de la migración es el uso de máscaras de bits predefinidas para la manipulación
+de registros. CMSIS define constantes simbólicas para todos los campos de bits dentro de los registros.
+Estas constantes, como \lstinline{RCC_APB2ENR_IOPCEN} o \lstinline{ADC_CR2_ADON}, describen semánticamente
+la función del bit o campo que se está modificando.
+
+El código resultante reemplaza los "números mágicos" empleados en la versión anterior por operaciones
+a nivel de bits lógicas y autodescriptivas. El código completo portado a CMSIS se observa en el listado~\ref{list.ej3:main}.
+
+\lstinputlisting[language={C}, caption={Código fuente principal refactorizado con CMSIS e implementación del \textit{SysTick} (\texttt{main.c}).}, label={list.ej3:main}]{sources/src/main.c}
+
+\section{Gestión de Tiempos mediante SysTick}
+\label{sec.ej3:systick}
+
+En versiones anteriores, los retardos (\textit{delays}) se implementaban mediante la ejecución de un bucle
+\lstinline{for} vacío. Este método de espera activa presenta múltiples desventajas: el tiempo
+resultante depende íntimamente de la velocidad de reloj del sistema, de las optimizaciones aplicadas por
+el compilador, y no ofrece un período de tiempo real determinista.
+
+Para solucionar este inconveniente, se ha configurado el \textit{SysTick}, un temporizador de 24 bits
+integrado directamente en el núcleo ARM Cortex-M3.
+
+\subsection{Configuración del Temporizador}
+
+El estándar CMSIS provee la función \lstinline{SysTick_Config(uint32_t ticks)}, la cual inicializa el
+temporizador y habilita su interrupción de desbordamiento. Para lograr una base de tiempo de \qty{1}{\ms},
+se debe cargar el registro de recarga con la cantidad equivalente de ciclos de reloj. Esto se logra
+dividiendo la frecuencia del núcleo (\lstinline{SystemCoreClock}) por $1000$:
+
+\begin{lstlisting}[language=C]
+SystemCoreClockUpdate();
+SysTick_Config(SystemCoreClock / 1000);
+\end{lstlisting}
+
+\subsection{Manejador de Interrupción e Implementación del Retardo}
+
+Una vez configurado, el \textit{SysTick} genera una excepción asíncrona exactamente cada milisegundo. En
+la tabla de vectores se ha implementado la rutina de servicio de interrupción (ISR) \lstinline{SysTick_Handler},
+la cual incrementa una variable global volátil \lstinline{ticks}.
+
+Esta variable se emplea para construir una función de retardo bloqueante determinista, \lstinline{delay_ms},
+que calcula la diferencia de tiempos (en milisegundos reales) y cede la ejecución hasta que haya
+transcurrido el período deseado. Esto permite reemplazar los retardos empíricos del bucle principal y garantizar
+una ejecución periódica del parpadeo del LED interno.

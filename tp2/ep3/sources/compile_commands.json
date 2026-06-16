@@ -1,0 +1,86 @@
+[
+  {
+    "file": "src/main.c",
+    "arguments": [
+      "/usr/sbin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m3",
+      "-mthumb",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-DSTM32F103xB",
+      "-MMD",
+      "-MP",
+      "-O0",
+      "-c",
+      "-o",
+      "build/src/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/fpp/Documentos/UTN/TecnicasDigitales2/tp2/ep3/sources",
+    "output": "build/src/main.o"
+  },
+  {
+    "file": "src/syscalls.c",
+    "arguments": [
+      "/usr/sbin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m3",
+      "-mthumb",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-DSTM32F103xB",
+      "-MMD",
+      "-MP",
+      "-O0",
+      "-c",
+      "-o",
+      "build/src/syscalls.o",
+      "src/syscalls.c"
+    ],
+    "directory": "/home/fpp/Documentos/UTN/TecnicasDigitales2/tp2/ep3/sources",
+    "output": "build/src/syscalls.o"
+  },
+  {
+    "file": "src/system_stm32f1xx.c",
+    "arguments": [
+      "/usr/sbin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m3",
+      "-mthumb",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-DSTM32F103xB",
+      "-MMD",
+      "-MP",
+      "-O0",
+      "-c",
+      "-o",
+      "build/src/system_stm32f1xx.o",
+      "src/system_stm32f1xx.c"
+    ],
+    "directory": "/home/fpp/Documentos/UTN/TecnicasDigitales2/tp2/ep3/sources",
+    "output": "build/src/system_stm32f1xx.o"
+  },
+  {
+    "file": "src/startup_stm32f103xb.s",
+    "arguments": [
+      "/usr/sbin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m3",
+      "-mthumb",
+      "-g",
+      "-Wall",
+      "-Iinclude",
+      "-DSTM32F103xB",
+      "-MMD",
+      "-MP",
+      "-O0",
+      "-c",
+      "-o",
+      "build/src/startup_stm32f103xb.o",
+      "src/startup_stm32f103xb.s"
+    ],
+    "directory": "/home/fpp/Documentos/UTN/TecnicasDigitales2/tp2/ep3/sources",
+    "output": "build/src/startup_stm32f103xb.o"
+  }
+]
