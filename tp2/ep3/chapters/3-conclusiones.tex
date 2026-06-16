@@ -15,6 +15,11 @@ y mantenimiento del firmware.
 
 Adicionalmente, la implementación del temporizador \textit{SysTick} permitió erradicar los retardos
 empíricos por bucles bloqueantes de software. La base de tiempo precisa y determinista de \qty{1}{\ms}
-alcanzada demuestra la potencia de integrar periféricos internos del núcleo para tareas de temporización,
-liberando al procesador de cálculos inexactos, optimizando la confiabilidad del sistema ante variaciones
-en la frecuencia del reloj, e incrementando el estándar general del código del proyecto.
+alcanzada demuestra la potencia de integrar periféricos internos del núcleo para tareas de temporización.
+
+Como grupo, las principales dificultades encontradas radicaron en la configuración inicial del \textit{SysTick}
+—específicamente el entendimiento de la relación entre la frecuencia del sistema y el registro de recarga— y, de manera
+más general, en la transición desde el uso de desplazamientos de bits con valores numéricos manuales hacia el empleo de
+las macros semánticas provistas por el estándar. Este último proceso resultó laborioso, ya que requirió una búsqueda
+exhaustiva en la documentación de la biblioteca para identificar la constante exacta correspondiente a cada campo de
+registro, reemplazando la lógica de "números mágicos" por identificadores estandarizados. 
