@@ -1,0 +1,17 @@
+\chapter{Introducción}
+
+Este informe documenta el desarrollo y la resolución del Ejercicio Práctico N° 4 del Trabajo Práctico N° 2.
+El objetivo principal de esta actividad es la implementación de una interfaz de comunicación serie bidireccional
+utilizando el periférico interno USART1 del microcontrolador STM32F103 (placa BluePill), comunicándolo con una PC
+mediante un conversor físico USB-UART.
+
+La comunicación serie asíncrona es uno de los métodos de comunicación más extendidos y sencillos en el ámbito de
+los sistemas embebidos. En esta etapa, se diseña un sistema de control interactivo mediante una máquina de estados
+que permite al usuario alternar entre modos de operación (como control de un parpadeo de LED y un modo de respuesta
+asociado a comandos) desde una terminal en la PC. Para lograr esto, se configura el periférico USART1 en formato
+9600 8N1, empleando interrupciones por hardware para transmisión (TC) y recepción (RXNE), garantizando un sistema
+eficiente que no dependa de esperas activas prolongadas para la E/S serie.
+
+Adicionalmente, se desarrolla una herramienta del lado de la PC en lenguaje C que actúa como monitor serie
+interactivo por consola, facilitando las pruebas de transmisión, recepción y el envío de comandos hacia la placa.
+

@@ -1,0 +1,23 @@
+\chapter{Conclusiones}
+\label{ch:conclusiones}
+
+La resolución del Ejercicio Práctico N° 4 permitió al grupo comprender e implementar los conceptos fundamentales
+de la comunicación serie asíncrona bidireccional mediante el periférico USART1 en microcontroladores de arquitectura
+Cortex-M3.
+
+A lo largo del desarrollo se presentaron desafíos técnicos significativos que enriquecieron el aprendizaje del grupo.
+El primer obstáculo importante radicó en la configuración del divisor de baudios (registro \lstinline{USART1->BRR}).
+Inicialmente, se asumió que la frecuencia de reloj del sistema era de \qty{72}{\MHz} de acuerdo a la configuración
+máxima típica del microcontrolador. Al aplicar la máscara correspondiente a dicha frecuencia, la comunicación
+fracasó de manera sistemática y la PC sólo recibía bytes nulos (\texttt{0x00}) o ruidos de sincronismo. La depuración
+de este problema forzó al grupo a examinar minuciosamente el datasheet, confirmando que el microcontrolador se mantiene funcionando con el oscilador interno
+HSI de \qty{8}{\MHz} en su estado por defecto, requiriendo recalcular el registro divisor a \lstinline{0x341} para
+lograr la sincronización a $9600$ baudios.
+
+Otro error frecuente y silencioso ocurrió al intentar integrar el temporizador SysTick para la gestión de retardos y el
+parpadeo del LED. La función de interrupción se nombró originalmente como \lstinline{SysTick_IRQHandler}. Dado que
+el enlazador de GCC no encontró errores de sintaxis, el código compilaba correctamente. Sin embargo, el contador
+\lstinline{ticks} no se incrementaba en absoluto. Tras consultar la tabla de vectores en el código de startup en
+ensamblador (\texttt{startup\_stm32f103xb.s}), se descubrió que el nombre exacto de la función en la tabla es
+\lstinline{SysTick_Handler} (sin la sigla IRQ). Al corregir este identificador, el enlazador sustituyó exitosamente la
+referencia débil y la base de tiempo de \qty{1}{\ms} comenzó a funcionar de forma transparente.
