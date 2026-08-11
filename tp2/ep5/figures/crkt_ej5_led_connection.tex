@@ -1,0 +1,7 @@
+\begin{circuitikz}[line width=0.8pt]
+  \draw (0,0) node[left] {\texttt{PA8 (TIM1\_CH1)}}
+        to[short, o-*] (1,0)
+        to[R, l={$R_{\mathrm{lim}} = \qty{330}{\ohm}$}] (3.5,0)
+        to[led, l={LED}] (5,0)
+        node[ground] {};
+\end{circuitikz}

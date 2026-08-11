@@ -1,0 +1,37 @@
+\chapter{Conclusiones}
+\label{ch.ej5:conclusiones}
+
+El desarrollo del Ejercicio Práctico N° 5 permitió comprender experimentalmente la configuración y operación de la
+generación de señales PWM por hardware utilizando los temporizadores de la arquitectura STM32F103C8T6.
+
+\section{Dificultades Encontradas}
+Durante el proceso de diseño e implementación en BareMetal con CMSIS, se presentaron las siguientes dificultades:
+
+\begin{enumerate}
+    \item \textbf{Habilitación de Salida Principal en Temporizadores Avanzados (\texttt{TIM1}):} A diferencia de los
+    temporizadores de propósito general (\texttt{TIM2}--\texttt{TIM5}), el temporizador avanzado \texttt{TIM1} requiere
+    activar obligatoriamente el bit \lstinline{MOE} (\textit{Main Output Enable}) en el registro \lstinline{BDTR}. En las
+    primeras pruebas, aunque el canal y el contador estaban activos, no había señal física en el pin \texttt{PA8}
+    hasta configurar dicho registro.
+    \item \textbf{Configuración del Módulo GPIO en Función Alternativa:} Resultó imprescindible configurar el pin
+    \texttt{PA8} como salida de \textit{Función Alternativa Push-Pull} (\lstinline{CNF8 = 10b}). Una configuración
+    como salida push-pull genérica desconecta internamente la salida del periférico \texttt{TIM1} de la línea física.
+    \item \textbf{Sincronización mediante Registros Sombra:} Se comprendió la necesidad de habilitar los bits de
+    precarga (\lstinline{OC1PE} y \lstinline{ARPE}) para evitar anomalías temporales (\textit{glitches}) al actualizar
+    el registro \lstinline{CCR1} durante la ejecución del bucle principal.
+\end{enumerate}
+
+\section{Conceptos Aprendidos}
+Entre los conceptos técnicos consolidados a lo largo de la práctica se destacan:
+
+\begin{enumerate}
+    \item \textbf{Generación Eficiente de PWM por Hardware:} La delegación de la conmutación de señales periódicas al
+    periférico del temporizador libera totalmente al procesador ARM Cortex-M3, permitiéndole ejecutar otras tareas en
+    paralelo de forma concurrente.
+    \item \textbf{Ajuste Fino de Frecuencia y Resolución:} Se dominó el cálculo que vincula la frecuencia de reloj
+    ($f_{\mathrm{CK\_PSC}}$), el preescalador (\texttt{PSC}) y el registro de autorrecarga (\texttt{ARR}) para fijar una
+    frecuencia de PWM deseada ($\qty{1}{\kHz}$) preservando una resolución de 1000 pasos discretos para el ciclo de trabajo.
+    \item \textbf{Arquitectura Concurrente No Bloqueante:} Se logró integrar la base de tiempo determinista obtenida con
+    \textit{SysTick} para realizar el parpadeo testigo del LED en \texttt{PC13} al mismo tiempo que se efectuaba la rampa
+    de variación de brillo en el LED de potencia conectado a \texttt{PA8}.
+\end{enumerate}

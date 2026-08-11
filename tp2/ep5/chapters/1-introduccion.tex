@@ -1,0 +1,17 @@
+\chapter{Introducción}
+\label{ch.ej5:introduccion}
+
+Este informe documenta la resolución del Ejercicio Práctico N° 5 correspondiente al Trabajo Práctico N° 2,
+centrado en la generación de una señal de Modulación por Ancho de Pulso (\textit{Pulse Width Modulation} - PWM)
+mediante temporizadores en el microcontrolador STM32F103C8T6 de la placa BluePill.
+
+La técnica de PWM permite regular la cantidad de potencia entregada a una carga eléctrica (como la intensidad
+lumínica de un LED o la velocidad de un motor) variando la proporción de tiempo en que la salida digital permanece
+en nivel alto ($\qty{3.3}{\V}$) respecto del período total de la señal.
+
+El objetivo de la experiencia consiste en configurar el temporizador de hardware \texttt{TIM1} para generar una
+señal PWM continua e independiente sobre el canal de salida física \texttt{TIM1\_CH1} (pin \texttt{PA8}), liberando
+al núcleo ARM Cortex-M3 de realizar la conmutación por software. Asimismo, mediante la variación periódica del
+registro de comparación \texttt{CCR1}, se implementa una secuencia de variación gradual de brillo (\textit{fading})
+en un LED exterior, manteniendo en paralelo el parpadeo determinista del LED testigo integrado (\texttt{PC13})
+mediante la base de tiempo proporcionada por el temporizador del sistema (\textit{SysTick}).
