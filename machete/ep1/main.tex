@@ -1,0 +1,374 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[left=1cm, right=1cm, top=2cm, bottom=1cm, headheight=25pt]{geometry}
+\usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[table]{xcolor}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{UTN-FRC \\ Técnicas Digitales II}
+\fancyhead[C]{\textbf{Hoja de Referencia BluePill} \\ \textbf{STM32F103C8T6}}
+\fancyhead[R]{Año 2026 \\ Franco Palombo \quad Pág. \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% Colores de la tabla similar al PDF
+\definecolor{tableheadcolor}{HTML}{D9E1F2}
+\definecolor{tablelightcolor}{HTML}{F2F2F2}
+
+% Formato de secciones
+\titleformat{\section}{\large\bfseries\color{blue!80!black}}{}{0pt}{}[\vspace{-2pt}\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{5pt}
+
+\setlength{\parindent}{0pt}
+
+% Comando para fila sombreada
+\newcommand{\rowgray}{\rowcolor{tablelightcolor}}
+\newcommand{\rowhead}{\rowcolor{tableheadcolor}}
+
+\begin{document}
+
+\small
+\begin{multicols*}{2}
+
+\section*{GPIO}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Elemento} & \textbf{Definiciones CMSIS} \\
+\textbf{Clock} & \texttt{RCC->APB2ENR} \\
+\rowgray \textbf{Puertos} & \texttt{GPIOA}, \texttt{GPIOB}, \texttt{GPIOC} \\
+\textbf{Configuración} & \texttt{CRL}, \texttt{CRH} \\
+\rowgray \textbf{Entrada/salida} & \texttt{IDR}, \texttt{ODR}, \texttt{BSRR}, \texttt{BRR} \\
+\textbf{Acceso} & \texttt{GPIOx->CRL}, \texttt{GPIOx->CRH} \\
+ & \texttt{GPIOx->IDR}, \texttt{GPIOx->ODR} \\
+\rowgray \textbf{Máscaras} & \texttt{RCC\_APB2ENR\_IOPxEN} \\
+\rowgray & \texttt{RCC\_APB2ENR\_AFIOEN} \\
+\rowgray & \texttt{GPIO\_IDR\_IDRp} \\
+\rowgray & \texttt{GPIO\_ODR\_ODRp} \\
+\end{tabularx}
+
+\vspace{1mm}
+\textbf{Configuración de Puertos} \\
+\begin{tabularx}{\columnwidth}{|c|c|L|}
+\hline
+\rowhead \textbf{CNF} & \textbf{MODE} & \textbf{Configuración (Modo)} \\
+\hline
+00 & 00 & Entrada analógica \\
+01 & 00 & Entrada flotante (Reset) \\
+10 & 00 & Entrada pull-up / pull-down \\
+11 & 00 & \textit{Reservado} \\
+\hline
+00 & $>00$ & Salida G.P. Push-pull \\
+01 & $>00$ & Salida G.P. Open-drain \\
+10 & $>00$ & Salida Alt. Fun. (AF) Push-pull \\
+11 & $>00$ & Salida Alt. Fun. (AF) Open-drain \\
+\hline
+\multicolumn{3}{|l|}{\cellcolor{tableheadcolor}\textbf{Opciones de MODE (Velocidad)}} \\
+\hline
+-- & 00 & Modo Entrada (Reset) \\
+-- & 01 & Salida, velocidad máx 10 MHz \\
+-- & 10 & Salida, velocidad máx 2 MHz \\
+-- & 11 & Salida, velocidad máx 50 MHz \\
+\hline
+\end{tabularx}
+\footnotesize
+\textbf{Nota:} \texttt{CRy} representa \texttt{CRL} (pines 0-7) o \texttt{CRH} (8-15). \texttt{p} es el número del pin. \texttt{x} es el puerto (A, B, C). \texttt{>00} significa 01, 10 o 11.
+
+\vspace{1mm}
+\textbf{Mapeo de Pines de Periféricos} \\
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Periférico} & \textbf{Pin y Modo de Configuración} \\
+\textbf{USART1 TX} & \texttt{PA9} -- Salida Alt. Fun. Push-Pull \\
+\rowgray \textbf{USART1 RX} & \texttt{PA10} -- Entrada Flotante / Pull-Up \\
+\textbf{TIM2 (CH1..4)} & \texttt{PA0}..\texttt{PA3} -- Salida Alt. Fun. Push-Pull \\
+\rowgray \textbf{ADC1 (IN0..IN7)} & \texttt{PA0}..\texttt{PA7} -- Entrada Analógica \\
+\textbf{LED Onboard} & \texttt{PC13} -- Salida G.P. Push-Pull \\
+\end{tabularx}
+
+\section*{EXTI}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Parámetro} & \textbf{Valor / Registro / Máscara} \\
+\rowgray \textbf{Selección} & \texttt{AFIO->EXTICR[0] a [3]} \\
+\textbf{Registros} & \texttt{EXTI->IMR}, \texttt{EXTI->RTSR} \\
+& \texttt{EXTI->FTSR}, \texttt{EXTI->PR} \\
+\rowgray \textbf{IRQ Indiv.} & \texttt{EXTI0\_IRQn} a \texttt{EXTI4\_IRQn} \\
+\textbf{IRQ Agrupadas} & \texttt{EXTI9\_5\_IRQn}, \texttt{EXTI15\_10\_IRQn} \\
+\rowgray \textbf{ISR usuales} & \texttt{EXTI0\_IRQHandler(void)} \\
+\rowgray & a \texttt{EXTI15\_10\_IRQHandler(void)} \\
+\textbf{Máscaras} & \texttt{EXTI\_IMR\_MRi}, \texttt{EXTI\_RTSR\_TRi} \\
+& \texttt{EXTI\_FTSR\_TRi}, \texttt{EXTI\_PR\_PRi} \\
+\end{tabularx}
+\footnotesize
+\textbf{Nota:} \texttt{i} representa la línea EXTI (0 a 15).
+
+\section*{NVIC}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Parámetro} & \textbf{Función CMSIS} \\
+\rowgray \textbf{Funciones} & \texttt{NVIC\_EnableIRQ(IRQn\_Type)} \\
+\rowgray & \texttt{NVIC\_SetPriority(IRQn\_Type, uint32\_t)} \\
+\end{tabularx}
+
+
+\section*{ADC1}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Elemento} & \textbf{Definiciones CMSIS} \\
+\textbf{Clock} & \texttt{RCC->APB2ENR} \\
+& \texttt{RCC\_APB2ENR\_ADC1EN} \\
+\rowgray \textbf{Periférico} & \texttt{ADC1} \\
+\textbf{Control} & \texttt{ADC1->CR1}, \texttt{ADC1->CR2} \\
+\rowgray \textbf{Muestreo} & \texttt{ADC1->SMPR1}, \texttt{ADC1->SMPR2} \\
+\textbf{Secuencia} & \texttt{ADC1->SQR1}, \texttt{ADC1->SQR2} \\
+& \texttt{ADC1->SQR3} \\
+\rowgray \textbf{Estado/dato} & \texttt{ADC1->SR}, \texttt{ADC1->DR} \\
+\textbf{Máscaras CR2} & \texttt{ADC\_CR2\_ADON} \\
+& \texttt{ADC\_CR2\_SWSTART} \\
+& \texttt{ADC\_CR2\_CONT} \\
+& \texttt{ADC\_CR2\_TSVREFE} \\
+& \texttt{ADC\_CR2\_EXTSEL} \\
+& \texttt{ADC\_CR2\_EXTTRIG} \\
+\rowgray \textbf{Otras} & \texttt{ADC\_SR\_EOC}, \texttt{ADC\_SMPR2\_SMP2} \\
+\end{tabularx}
+
+\section*{UART -- USART1}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Elemento} & \textbf{Definiciones CMSIS} \\
+\textbf{Clock} & \texttt{RCC\_APB2ENR\_USART1EN} \\
+\rowgray \textbf{Periférico} & \texttt{USART1} \\
+\textbf{Registros} & \texttt{USART1->SR}, \texttt{USART1->DR} \\
+& \texttt{USART1->BRR} \\
+& \texttt{USART1->CR1}, \texttt{USART1->CR2} \\
+\rowgray \textbf{Habilitación} & \texttt{USART\_CR1\_UE}, \texttt{USART\_CR1\_TE} \\
+\rowgray & \texttt{USART\_CR1\_RE} \\
+\textbf{Recepción} & \texttt{USART\_CR1\_RXNEIE} \\
+& \texttt{USART1\_IRQn} \\
+& \texttt{USART1\_IRQHandler(void)} \\
+\rowgray \textbf{Flags} & \texttt{USART\_SR\_TXE}, \texttt{USART\_SR\_RXNE} \\
+\rowgray & \texttt{USART\_SR\_TC} \\
+\end{tabularx}
+\begin{equation*}
+    \text{Baud} = \frac{f_{\text{CK}}}{16 \times \text{USARTDIV}}
+\end{equation*}
+
+\section*{PWM -- TIM2, canal c}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Elemento} & \textbf{Definiciones CMSIS} \\
+\textbf{Clock} & \texttt{RCC\_APB1ENR\_TIM2EN} \\
+\rowgray \textbf{Periférico} & \texttt{TIM2} \\
+\textbf{Base tiempo} & \texttt{TIM2->PSC}, \texttt{TIM2->ARR} \\
+\rowgray \textbf{Comparación} & \texttt{TIM2->CCRc} \\
+\textbf{Salida} & \texttt{TIM2->CCMRz}, \texttt{TIM2->CCER} \\
+\rowgray \textbf{Eventos} & \texttt{TIM2->CR1}, \texttt{TIM2->EGR} \\
+\textbf{Máscaras} & \texttt{TIM\_CR1\_CEN} \\
+& \texttt{TIM\_CCER\_CCxE} \\
+& \texttt{TIM\_CCER\_CCxP} \\
+& \texttt{TIM\_CCMRz\_OCxPE} \\
+& \texttt{TIM\_CCMRz\_OCxM} \\
+& \texttt{TIM\_EGR\_UG} \\
+\end{tabularx}
+\begin{equation*}
+    f_{\text{PWM}} = \frac{f_{\text{CK\_PSC}}}{(\text{PSC}+1)(\text{ARR}+1)} \quad \text{Duty} = \frac{\text{CCR}x}{\text{ARR}+1} \times 100\%
+\end{equation*}
+\footnotesize
+\textbf{Nota:} \texttt{c} o \texttt{x} es el nro de canal (1 a 4). \texttt{z} es 1 para canales 1 y 2; es 2 para canales 3 y 4.
+
+\section*{SysTick}
+\begin{tabularx}{\columnwidth}{l L}
+\rowhead \textbf{Elemento} & \textbf{Definiciones CMSIS} \\
+\textbf{Registros} & \texttt{SysTick->CTRL}, \texttt{SysTick->LOAD} \\
+& \texttt{SysTick->VAL} \\
+\rowgray \textbf{Máscaras} & \texttt{SysTick\_CTRL\_ENABLE\_Msk} \\
+\rowgray & \texttt{SysTick\_CTRL\_TICKINT\_Msk} \\
+\rowgray & \texttt{SysTick\_CTRL\_CLKSOURCE\_Msk} \\
+\rowgray & \texttt{SysTick\_CTRL\_COUNTFLAG\_Msk} \\
+\textbf{Handlers} & \texttt{SysTick\_Config(uint32\_t ticks)} \\
+& \texttt{SysTick\_Handler(void)} \\
+\end{tabularx}
+
+\end{multicols*}
+
+\newpage
+\small
+\begin{multicols*}{2}
+
+% Definición de estilo para listas compactas
+\let\olditemize\itemize
+\renewcommand{\itemize}{\olditemize\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}\setlength{\parsep}{0pt}}
+
+\section*{RCC (\texttt{0x4002 1000})}
+\begin{itemize}
+    \item \textbf{APB2ENR} (Offset: \texttt{0x18})
+    \begin{itemize}
+        \item \texttt{[14]} \texttt{USART1EN}: Reloj USART1.
+        \item \texttt{[9]} \texttt{ADC1EN}: Reloj ADC1.
+        \item \texttt{[4]} \texttt{IOPCEN}: Reloj Puerto C.
+        \item \texttt{[3]} \texttt{IOPBEN}: Reloj Puerto B.
+        \item \texttt{[2]} \texttt{IOPAEN}: Reloj Puerto A.
+        \item \texttt{[0]} \texttt{AFIOEN}: Reloj Funciones Alternativas.
+    \end{itemize}
+    \item \textbf{APB1ENR} (Offset: \texttt{0x1C})
+    \begin{itemize}
+        \item \texttt{[0]} \texttt{TIM2EN}: Reloj Timer 2.
+    \end{itemize}
+\end{itemize}
+
+\section*{GPIO (\texttt{0x4001} A=\texttt{0800}, B=\texttt{0C00}, C=\texttt{1000})}
+\textit{Relativas a \texttt{0x4001 0000}}
+\begin{itemize}
+    \item \textbf{CRL / CRH} (Offsets: \texttt{0x00} / \texttt{0x04})
+    \begin{itemize}
+        \item \texttt{[4p+3 : 4p+2]} \texttt{CNFp}: Config. del pin.
+        \item \texttt{[4p+1 : 4p]} \texttt{MODEp}: Modo/Velocidad del pin.
+    \end{itemize}
+    \item \textbf{IDR / ODR} (Offsets: \texttt{0x08} / \texttt{0x0C})
+    \begin{itemize}
+        \item \texttt{[15:0]}: Estado de entrada (\texttt{IDR}) o salida (\texttt{ODR}).
+    \end{itemize}
+    \item \textbf{BSRR} (Offset: \texttt{0x10})
+    \begin{itemize}
+        \item \texttt{[31:16]} \texttt{BRy}: Reset pin $y$ (escribir 1 pone pin en 0).
+        \item \texttt{[15:0]} \texttt{BSy}: Set pin $y$ (escribir 1 pone pin en 1).
+    \end{itemize}
+\end{itemize}
+
+\section*{AFIO (\texttt{0x4001 0000})}
+\begin{itemize}
+    \item \textbf{AFIO\_EXTICR1 a 4} (Offsets: \texttt{0x08} a \texttt{0x14})
+    \begin{itemize}
+        \item 4 bits por pin para elegir el puerto (0000=PA, 0001=PB, 0010=PC). \textit{Ej: EXTICR1 tiene pines 0 a 3.}
+    \end{itemize}
+\end{itemize}
+
+\section*{EXTI (\texttt{0x4001 0400})}
+\begin{itemize}
+    \item \textbf{EXTI\_IMR} (Offset: \texttt{0x00})
+    \begin{itemize}
+        \item \texttt{[19:0]} \texttt{MRy}: 1 = Habilita (desenmascara) int. $y$.
+    \end{itemize}
+    \item \textbf{EXTI\_RTSR / FTSR} (Offsets: \texttt{0x08} / \texttt{0x0C})
+    \begin{itemize}
+        \item \texttt{[19:0]} \texttt{TRy}: 1 = Flanco ascendente / descendente.
+    \end{itemize}
+    \item \textbf{EXTI\_PR} (Offset: \texttt{0x14})
+    \begin{itemize}
+        \item \texttt{[19:0]} \texttt{PRy}: 1 = Int. ocurrida (Limpiar con 1).
+    \end{itemize}
+\end{itemize}
+
+\section*{NVIC (\texttt{0xE000 E100})}
+\begin{itemize}
+    \item \textbf{Offsets}: ISER \texttt{0x000}, ICER \texttt{0x080}, ISPR \texttt{0x100}, ICPR \texttt{0x180}
+    \item \textbf{NVIC\_ISERx}:
+    \begin{itemize}
+        \item ISER0 (Offset \texttt{0x00}): Habilita IRQs 0 a 31 ($1 \ll \mathtt{IRQn}$).
+        \item ISER1 (Offset \texttt{0x04}): Habilita IRQs 32 a 63 ($1 \ll (\mathtt{IRQn}-32)$).
+    \end{itemize}
+    \item \textbf{Números de Interrupción (\texttt{IRQn}):}
+    \begin{itemize}
+        \item \texttt{EXTI0} a \texttt{EXTI4}: 6 a 10
+        \item \texttt{ADC1\_2}: 18
+        \item \texttt{EXTI9\_5}: 23
+        \item \texttt{TIM2}: 28
+        \item \texttt{USART1}: 37 \textit{(Requiere ISER1)}
+        \item \texttt{EXTI15\_10}: 40 \textit{(Requiere ISER1)}
+    \end{itemize}
+\end{itemize}
+
+\section*{SysTick (\texttt{0xE000 E010})}
+\begin{itemize}
+    \item \textbf{CTRL} (Offset: \texttt{0x00})
+    \begin{itemize}
+        \item \texttt{[16]} \texttt{COUNTFLAG}, \texttt{[2]} \texttt{CLKSOURCE}, \texttt{[1]} \texttt{TICKINT}, \texttt{[0]} \texttt{ENABLE}
+    \end{itemize}
+    \item \textbf{LOAD / VAL / CALIB} (Offsets: \texttt{0x04} / \texttt{0x08} / \texttt{0x0C})
+    \begin{itemize}
+        \item \texttt{[23:0]}: Valor de recarga / Valor actual / Calibración.
+    \end{itemize}
+\end{itemize}
+
+\section*{ADC1 (\texttt{0x4001 2400})}
+\begin{itemize}
+    \item \textbf{CR2} (Offset: \texttt{0x08})
+    \begin{itemize}
+        \item \texttt{[23]} \texttt{TSVREFE}: 1 = Habilita sensor interno Temp.
+        \item \texttt{[22]} \texttt{SWSTART}: 1 = Inicia lectura regular manual.
+        \item \texttt{[20]} \texttt{EXTTRIG}: 1 = Habilita disparo externo.
+        \item \texttt{[19:17]} \texttt{EXTSEL}: Elige el evento disparador.
+        \item \texttt{[1]} \texttt{CONT}: 1 = Continuo, 0 = Single.
+        \item \texttt{[0]} \texttt{ADON}: 1 = Enciende ADC / Dispara conversión.
+    \end{itemize}
+    \item \textbf{SR} (Offset: \texttt{0x00})
+    \begin{itemize}
+        \item \texttt{[1]} \texttt{EOC}: 1 = Dato listo. Se limpia al leer.
+    \end{itemize}
+    \item \textbf{SQR1} (Offset: \texttt{0x2C})
+    \begin{itemize}
+        \item \texttt{[23:20]} \texttt{L}: Cant. total de conversiones menos 1.
+    \end{itemize}
+    \item \textbf{SQR3} (Offset: \texttt{0x34})
+    \begin{itemize}
+        \item \texttt{[4:0]} \texttt{SQ1}: Número del 1er canal a leer.
+    \end{itemize}
+    \item \textbf{DR} (Offset: \texttt{0x4C})
+    \begin{itemize}
+        \item \texttt{[15:0]}: Dato convertido de lectura regular.
+    \end{itemize}
+\end{itemize}
+
+\section*{USART1 (\texttt{0x4001 3800})}
+\begin{itemize}
+    \item \textbf{CR1} (Offset: \texttt{0x0C})
+    \begin{itemize}
+        \item \texttt{[13]} \texttt{UE}: 1 = Habilita USART.
+        \item \texttt{[5]} \texttt{RXNEIE}: 1 = Int. de recepción habilitada.
+        \item \texttt{[3]} \texttt{TE} / \texttt{[2]} \texttt{RE}: 1 = Habilita Transm. / Recep.
+    \end{itemize}
+    \item \textbf{BRR} (Offset: \texttt{0x08}) 
+    \begin{itemize}
+        \item \texttt{[15:4]} \texttt{DIV\_Mantissa} / \texttt{[3:0]} \texttt{DIV\_Fraction}.
+    \end{itemize}
+    \item \textbf{SR} (Offset: \texttt{0x00})
+    \begin{itemize}
+        \item \texttt{[7]} \texttt{TXE}: 1 = Buffer vacío. \texttt{[6]} \texttt{TC}: 1 = Transmisión compl.
+        \item \texttt{[5]} \texttt{RXNE}: 1 = Dato recibido.
+    \end{itemize}
+    \item \textbf{DR} (Offset: \texttt{0x04})
+    \begin{itemize}
+        \item \texttt{[8:0]}: Dato a enviar o recién recibido.
+    \end{itemize}
+\end{itemize}
+
+\section*{TIM2 - PWM (\texttt{0x4000 0000})}
+\begin{itemize}
+    \item \textbf{CR1} (Offset: \texttt{0x00})
+    \begin{itemize}
+        \item \texttt{[0]} \texttt{CEN}: 1 = Enciende timer.
+    \end{itemize}
+    \item \textbf{PSC / ARR} (Offsets: \texttt{0x28} / \texttt{0x2C})
+    \begin{itemize}
+        \item \texttt{[15:0]}: Divisor de reloj / Tope (Período PWM).
+    \end{itemize}
+    \item \textbf{CCMR1 / CCMR2} (Offsets: \texttt{0x18} / \texttt{0x1C})
+    \begin{itemize}
+        \item \texttt{[6:4] OC1M} / \texttt{[14:12] OC2M}: Modos (ej. 110 PWM).
+        \item \texttt{[3] OC1PE} / \texttt{[11] OC2PE}: 1 = Preload enable.
+    \end{itemize}
+    \item \textbf{CCER} (Offset: \texttt{0x20})
+    \begin{itemize}
+        \item \texttt{[1]} \texttt{CC1P}: 1 = Salida invertida. \texttt{[0]} \texttt{CC1E}: 1 = Habilita pin.
+    \end{itemize}
+    \item \textbf{CCRx} (Offsets: \texttt{0x34} a \texttt{0x40})
+    \begin{itemize}
+        \item \texttt{[15:0]}: Umbral de comparación (Duty Cycle).
+    \end{itemize}
+\end{itemize}
+
+\end{multicols*}
+\end{document}
