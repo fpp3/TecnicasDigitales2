@@ -204,7 +204,7 @@
 
 \section*{RCC (\texttt{0x4002 1000})}
 \begin{itemize}
-    \item \textbf{APB2ENR} (Offset: \texttt{0x18})
+    \item \textbf{APB2ENR} (Offset \texttt{0x18}) -- \textit{APB2 Peripheral Clock Enable Register}
     \begin{itemize}
         \item \texttt{[14]} \texttt{USART1EN}: Reloj USART1.
         \item \texttt{[9]} \texttt{ADC1EN}: Reloj ADC1.
@@ -213,7 +213,7 @@
         \item \texttt{[2]} \texttt{IOPAEN}: Reloj Puerto A.
         \item \texttt{[0]} \texttt{AFIOEN}: Reloj Funciones Alternativas.
     \end{itemize}
-    \item \textbf{APB1ENR} (Offset: \texttt{0x1C})
+    \item \textbf{APB1ENR} (Offset \texttt{0x1C}) -- \textit{APB1 Peripheral Clock Enable Register}
     \begin{itemize}
         \item \texttt{[0]} \texttt{TIM2EN}: Reloj Timer 2.
     \end{itemize}
@@ -222,25 +222,26 @@
 \section*{GPIO (\texttt{0x4001} A=\texttt{0800}, B=\texttt{0C00}, C=\texttt{1000})}
 \textit{Relativas a \texttt{0x4001 0000}}
 \begin{itemize}
-    \item \textbf{CRL / CRH} (Offsets: \texttt{0x00} / \texttt{0x04})
+    \item \textbf{CRL / CRH} (Offsets \texttt{0x00} / \texttt{0x04}) -- \textit{Port Config Reg Low / High}
     \begin{itemize}
         \item \texttt{[4p+3 : 4p+2]} \texttt{CNFp}: Config. del pin.
         \item \texttt{[4p+1 : 4p]} \texttt{MODEp}: Modo/Velocidad del pin.
     \end{itemize}
-    \item \textbf{IDR / ODR} (Offsets: \texttt{0x08} / \texttt{0x0C})
+    \item \textbf{IDR / ODR} (Offsets \texttt{0x08} / \texttt{0x0C}) -- \textit{Input / Output Data Register}
     \begin{itemize}
         \item \texttt{[15:0]}: Estado de entrada (\texttt{IDR}) o salida (\texttt{ODR}).
     \end{itemize}
-    \item \textbf{BSRR} (Offset: \texttt{0x10})
+    \item \textbf{BSRR} (Offset \texttt{0x10}) -- \textit{Bit Set/Reset Register}
     \begin{itemize}
         \item \texttt{[31:16]} \texttt{BRy}: Reset pin $y$ (escribir 1 pone pin en 0).
         \item \texttt{[15:0]} \texttt{BSy}: Set pin $y$ (escribir 1 pone pin en 1).
     \end{itemize}
+    \item \textbf{BRR} (Offset \texttt{0x14}) -- \textit{Bit Reset Register}
 \end{itemize}
 
 \section*{AFIO (\texttt{0x4001 0000})}
 \begin{itemize}
-    \item \textbf{AFIO\_EXTICR1 a 4} (Offsets: \texttt{0x08} a \texttt{0x14})
+    \item \textbf{AFIO\_EXTICR1 a 4} (Offsets \texttt{0x08} a \texttt{0x14}) -- \textit{EXTI Configuration Regs}
     \begin{itemize}
         \item 4 bits por pin para elegir el puerto (0000=PA, 0001=PB, 0010=PC). \textit{Ej: EXTICR1 tiene pines 0 a 3.}
     \end{itemize}
@@ -248,15 +249,15 @@
 
 \section*{EXTI (\texttt{0x4001 0400})}
 \begin{itemize}
-    \item \textbf{EXTI\_IMR} (Offset: \texttt{0x00})
+    \item \textbf{EXTI\_IMR} (Offset \texttt{0x00}) -- \textit{Interrupt Mask Register}
     \begin{itemize}
         \item \texttt{[19:0]} \texttt{MRy}: 1 = Habilita (desenmascara) int. $y$.
     \end{itemize}
-    \item \textbf{EXTI\_RTSR / FTSR} (Offsets: \texttt{0x08} / \texttt{0x0C})
+    \item \textbf{EXTI\_RTSR / FTSR} (Offsets \texttt{0x08} / \texttt{0x0C}) -- \textit{Rising / Falling Trigger}
     \begin{itemize}
         \item \texttt{[19:0]} \texttt{TRy}: 1 = Flanco ascendente / descendente.
     \end{itemize}
-    \item \textbf{EXTI\_PR} (Offset: \texttt{0x14})
+    \item \textbf{EXTI\_PR} (Offset \texttt{0x14}) -- \textit{Pending Register}
     \begin{itemize}
         \item \texttt{[19:0]} \texttt{PRy}: 1 = Int. ocurrida (Limpiar con 1).
     \end{itemize}
@@ -264,7 +265,8 @@
 
 \section*{NVIC (\texttt{0xE000 E100})}
 \begin{itemize}
-    \item \textbf{Offsets}: ISER \texttt{0x000}, ICER \texttt{0x080}, ISPR \texttt{0x100}, ICPR \texttt{0x180}
+    \item \textbf{ISER} (\texttt{0x000}) / \textbf{ICER} (\texttt{0x080}) -- \textit{Set / Clear Enable Regs}
+    \item \textbf{ISPR} (\texttt{0x100}) / \textbf{ICPR} (\texttt{0x180}) -- \textit{Set / Clear Pending Regs}
     \item \textbf{NVIC\_ISERx}:
     \begin{itemize}
         \item ISER0 (Offset \texttt{0x00}): Habilita IRQs 0 a 31 ($1 \ll \mathtt{IRQn}$).
@@ -272,22 +274,18 @@
     \end{itemize}
     \item \textbf{Números de Interrupción (\texttt{IRQn}):}
     \begin{itemize}
-        \item \texttt{EXTI0} a \texttt{EXTI4}: 6 a 10
-        \item \texttt{ADC1\_2}: 18
-        \item \texttt{EXTI9\_5}: 23
-        \item \texttt{TIM2}: 28
-        \item \texttt{USART1}: 37 \textit{(Requiere ISER1)}
-        \item \texttt{EXTI15\_10}: 40 \textit{(Requiere ISER1)}
+        \item \texttt{EXTI0}..\texttt{4}: 6..10 $|$ \texttt{ADC1\_2}: 18 $|$ \texttt{EXTI9\_5}: 23 $|$ \texttt{TIM2}: 28
+        \item \texttt{USART1}: 37 \textit{(ISER1)} $|$ \texttt{EXTI15\_10}: 40 \textit{(ISER1)}
     \end{itemize}
 \end{itemize}
 
 \section*{SysTick (\texttt{0xE000 E010})}
 \begin{itemize}
-    \item \textbf{CTRL} (Offset: \texttt{0x00})
+    \item \textbf{CTRL} (Offset \texttt{0x00}) -- \textit{SysTick Control and Status Register}
     \begin{itemize}
         \item \texttt{[16]} \texttt{COUNTFLAG}, \texttt{[2]} \texttt{CLKSOURCE}, \texttt{[1]} \texttt{TICKINT}, \texttt{[0]} \texttt{ENABLE}
     \end{itemize}
-    \item \textbf{LOAD / VAL / CALIB} (Offsets: \texttt{0x04} / \texttt{0x08} / \texttt{0x0C})
+    \item \textbf{LOAD} (\texttt{0x04}) / \textbf{VAL} (\texttt{0x08}) / \textbf{CALIB} (\texttt{0x0C}) -- \textit{Reload / Current / Calib}
     \begin{itemize}
         \item \texttt{[23:0]}: Valor de recarga / Valor actual / Calibración.
     \end{itemize}
@@ -295,79 +293,53 @@
 
 \section*{ADC1 (\texttt{0x4001 2400})}
 \begin{itemize}
-    \item \textbf{CR2} (Offset: \texttt{0x08})
+    \item \textbf{CR2} (Offset \texttt{0x08}) -- \textit{Control Register 2}
     \begin{itemize}
-        \item \texttt{[23]} \texttt{TSVREFE}: 1 = Habilita sensor interno Temp.
-        \item \texttt{[22]} \texttt{SWSTART}: 1 = Inicia lectura regular manual.
-        \item \texttt{[20]} \texttt{EXTTRIG}: 1 = Habilita disparo externo.
-        \item \texttt{[19:17]} \texttt{EXTSEL}: Elige el evento disparador.
-        \item \texttt{[1]} \texttt{CONT}: 1 = Continuo, 0 = Single.
-        \item \texttt{[0]} \texttt{ADON}: 1 = Enciende ADC / Dispara conversión.
+        \item \texttt{[23]} \texttt{TSVREFE}: Temp. \texttt{[22]} \texttt{SWSTART}: Inicia manual.
+        \item \texttt{[20]} \texttt{EXTTRIG}: Disparo ext. \texttt{[19:17]} \texttt{EXTSEL}: Evento ext.
+        \item \texttt{[1]} \texttt{CONT}: 1 = Continuo. \texttt{[0]} \texttt{ADON}: Enciende/Dispara.
     \end{itemize}
-    \item \textbf{SR} (Offset: \texttt{0x00})
+    \item \textbf{SR} (Offset \texttt{0x00}) -- \textit{Status Register}
     \begin{itemize}
-        \item \texttt{[1]} \texttt{EOC}: 1 = Dato listo. Se limpia al leer.
+        \item \texttt{[1]} \texttt{EOC}: 1 = Fin conversión (limpia al leer DR).
     \end{itemize}
-    \item \textbf{SQR1} (Offset: \texttt{0x2C})
+    \item \textbf{SQR1 / SQR3} (Offsets \texttt{0x2C} / \texttt{0x34}) -- \textit{Sequence Registers}
     \begin{itemize}
-        \item \texttt{[23:20]} \texttt{L}: Cant. total de conversiones menos 1.
+        \item \texttt{SQR1[23:20]} \texttt{L}: Cantidad-1. \texttt{SQR3[4:0]} \texttt{SQ1}: 1er canal.
     \end{itemize}
-    \item \textbf{SQR3} (Offset: \texttt{0x34})
-    \begin{itemize}
-        \item \texttt{[4:0]} \texttt{SQ1}: Número del 1er canal a leer.
-    \end{itemize}
-    \item \textbf{DR} (Offset: \texttt{0x4C})
-    \begin{itemize}
-        \item \texttt{[15:0]}: Dato convertido de lectura regular.
-    \end{itemize}
+    \item \textbf{DR} (Offset \texttt{0x4C}) -- \textit{Regular Data Register}
 \end{itemize}
 
 \section*{USART1 (\texttt{0x4001 3800})}
 \begin{itemize}
-    \item \textbf{CR1} (Offset: \texttt{0x0C})
+    \item \textbf{CR1} (Offset \texttt{0x0C}) -- \textit{Control Register 1}
     \begin{itemize}
-        \item \texttt{[13]} \texttt{UE}: 1 = Habilita USART.
-        \item \texttt{[5]} \texttt{RXNEIE}: 1 = Int. de recepción habilitada.
-        \item \texttt{[3]} \texttt{TE} / \texttt{[2]} \texttt{RE}: 1 = Habilita Transm. / Recep.
+        \item \texttt{[13]} \texttt{UE}: Habilita. \texttt{[5]} \texttt{RXNEIE}: Int RX. \texttt{[3]} \texttt{TE} / \texttt{[2]} \texttt{RE}: TX/RX.
     \end{itemize}
-    \item \textbf{BRR} (Offset: \texttt{0x08}) 
+    \item \textbf{BRR} (Offset \texttt{0x08}) -- \textit{Baud Rate Register} 
     \begin{itemize}
         \item \texttt{[15:4]} \texttt{DIV\_Mantissa} / \texttt{[3:0]} \texttt{DIV\_Fraction}.
     \end{itemize}
-    \item \textbf{SR} (Offset: \texttt{0x00})
+    \item \textbf{SR} (Offset \texttt{0x00}) -- \textit{Status Register}
     \begin{itemize}
-        \item \texttt{[7]} \texttt{TXE}: 1 = Buffer vacío. \texttt{[6]} \texttt{TC}: 1 = Transmisión compl.
-        \item \texttt{[5]} \texttt{RXNE}: 1 = Dato recibido.
+        \item \texttt{[7]} \texttt{TXE}: Buffer vacío. \texttt{[6]} \texttt{TC}: Transmisión compl. \texttt{[5]} \texttt{RXNE}: Dato listo.
     \end{itemize}
-    \item \textbf{DR} (Offset: \texttt{0x04})
-    \begin{itemize}
-        \item \texttt{[8:0]}: Dato a enviar o recién recibido.
-    \end{itemize}
+    \item \textbf{DR} (Offset \texttt{0x04}) -- \textit{Data Register}
 \end{itemize}
 
 \section*{TIM2 - PWM (\texttt{0x4000 0000})}
 \begin{itemize}
-    \item \textbf{CR1} (Offset: \texttt{0x00})
+    \item \textbf{CR1} (Offset \texttt{0x00}) -- \textit{Control Register 1} (\texttt{[0]} \texttt{CEN}: Enciende)
+    \item \textbf{PSC / ARR} (Offsets \texttt{0x28} / \texttt{0x2C}) -- \textit{Prescaler / Auto-Reload}
+    \item \textbf{CCMR1 / CCMR2} (Offsets \texttt{0x18} / \texttt{0x1C}) -- \textit{Capture/Compare Mode}
     \begin{itemize}
-        \item \texttt{[0]} \texttt{CEN}: 1 = Enciende timer.
+        \item \texttt{[6:4]/[14:12] OCxM}: Modo (110=PWM). \texttt{[3]/[11] OCxPE}: Preload.
     \end{itemize}
-    \item \textbf{PSC / ARR} (Offsets: \texttt{0x28} / \texttt{0x2C})
+    \item \textbf{CCER} (Offset \texttt{0x20}) -- \textit{Capture/Compare Enable Register}
     \begin{itemize}
-        \item \texttt{[15:0]}: Divisor de reloj / Tope (Período PWM).
+        \item \texttt{[1]} \texttt{CC1P}: Salida invertida. \texttt{[0]} \texttt{CC1E}: Habilita pin.
     \end{itemize}
-    \item \textbf{CCMR1 / CCMR2} (Offsets: \texttt{0x18} / \texttt{0x1C})
-    \begin{itemize}
-        \item \texttt{[6:4] OC1M} / \texttt{[14:12] OC2M}: Modos (ej. 110 PWM).
-        \item \texttt{[3] OC1PE} / \texttt{[11] OC2PE}: 1 = Preload enable.
-    \end{itemize}
-    \item \textbf{CCER} (Offset: \texttt{0x20})
-    \begin{itemize}
-        \item \texttt{[1]} \texttt{CC1P}: 1 = Salida invertida. \texttt{[0]} \texttt{CC1E}: 1 = Habilita pin.
-    \end{itemize}
-    \item \textbf{CCRx} (Offsets: \texttt{0x34} a \texttt{0x40})
-    \begin{itemize}
-        \item \texttt{[15:0]}: Umbral de comparación (Duty Cycle).
-    \end{itemize}
+    \item \textbf{CCRx} (Offsets \texttt{0x34}..\texttt{0x40}) -- \textit{Capture/Compare Register}
 \end{itemize}
 
 \end{multicols*}
