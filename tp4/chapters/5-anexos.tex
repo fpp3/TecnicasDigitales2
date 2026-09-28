@@ -1,0 +1,40 @@
+\chapter{Anexos}
+\label{sec.anexos:codigo}
+
+\section{Código Fuente del Ejercicio Práctico N.º 1}
+
+A continuación se presenta el código completo del archivo \texttt{main.c} correspondiente al Ejercicio 1,
+donde se implementan las tareas de señalización luminosa y telemetría junto al gancho de inactividad.
+
+\lstinputlisting[
+  language=C,
+  caption={Código fuente completo de \texttt{main.c} para el Ejercicio 1.},
+  label={list.ej1:main}
+]{sources/ep1/src/main.c}
+
+\newpage
+
+\section{Código Fuente del Ejercicio Práctico N.º 2}
+
+A continuación se transcribe el código del archivo \texttt{main.c} correspondiente al Ejercicio 2,
+incorporando el periférico ADC1, la rutina de interrupción \texttt{ADC1\_2\_IRQHandler}, la cola \texttt{xADC1Queue}
+y el semáforo binario \texttt{xADC1Semaphore}.
+
+\lstinputlisting[
+  language=C,
+  caption={Código fuente completo de \texttt{main.c} para el Ejercicio 2.},
+  label={list.ej2:main}
+]{sources/ep2/src/main.c}
+
+\newpage
+
+\section{Configuración del Kernel (\texttt{FreeRTOSConfig.h})}
+
+En este anexo se adjunta el archivo de cabecera \texttt{FreeRTOSConfig.h} empleado para parametrizar el núcleo del
+sistema operativo en ambos ejercicios prácticos.
+
+\lstinputlisting[
+  language=C,
+  caption={Archivo de configuración \texttt{FreeRTOSConfig.h} del kernel para STM32F103.},
+  label={list.config:freertos}
+]{sources/ep1/include/FreeRTOSConfig.h}
