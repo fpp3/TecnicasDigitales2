@@ -3,20 +3,20 @@
 
 \section{Descripción General}
 
-El primer ejercicio tiene como propósito implementar un esquema de multitarea apropiativa
-utilizando el núcleo de FreeRTOS, verificando la coexistencia de múltiples flujos de ejecución concurrentes con
-diferentes niveles de prioridad y períodos de repetición.
+El primer ejercicio tiene como propósito implementar un esquema de multitarea utilizando el núcleo de FreeRTOS,
+verificando la coexistencia de múltiples flujos de ejecución con diferentes niveles de prioridad y períodos de
+repetición.
 
 El sistema debe ejecutar de forma simultánea tres actividades con restricciones temporales diferenciadas:
 el parpadeo de un LED de señalización a frecuencia constante, la emisión periódica de una cadena de texto con datos
-de diagnóstico a través del puerto serie USART1, y el cómputo de la disponibilidad de procesamiento mediante el monitoreo
+de diagnóstico a través del puerto serie USART1, y el conteo de ciclos en reposo mediante el monitoreo
 de la tarea Idle.
 
 \section{Estructura de Tareas y Prioridades}
 
-Para satisfacer las consignas se definieron dos tareas de usuario explícitas y se habilitó la función \textit{IdleHook}
-asociada a la tarea del sistema. En la tabla \ref{tab.ej1:tareas} se resumen los parámetros de configuración
-asignados a cada tarea durante la inicialización.
+Se definieron dos tareas de usuario explícitas y se habilitó la función \textit{IdleHook} asociada a la tarea del
+sistema. En la tabla \ref{tab.ej1:tareas} se resumen los parámetros de configuración asignados a cada tarea durante la
+inicialización.
 
 \begin{table}[!ht]
 \centering
@@ -69,12 +69,11 @@ El funcionamiento del programa se apoya en los siguientes servicios y primitivas
 
 \subsection{Creación e Inicialización de Tareas}
 
-\begin{lstlisting}[language=C]
-res = xTaskCreate(vBlink, "Blink", 256, NULL, 3, NULL);
-if (res != pdPASS) {
-    while(1);
-}
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={26-34},
+  firstnumber=26
+]{sources/ep1/src/main.c}
 
 Se verifica sistemáticamente el valor de retorno. Si la función retorna un código distinto de \texttt{pdPASS}, se
 detiene el flujo de ejecución en una condición segura de error.
@@ -88,15 +87,11 @@ Una vez configuradas las tareas y los periféricos de hardware mediante llamadas
 Para garantizar una periodicidad rigurosa sin acumulación de corrimiento temporal, se optó por el uso de
 \texttt{vTaskDelayUntil()} en lugar de la función de retardo relativo convencional \texttt{vTaskDelay()}.
 
-\begin{lstlisting}[language=C]
-void vBlink(void *pvParameters) {
-    TickType_t xLastTickEntry = xTaskGetTickCount();
-    while (1) {
-        GPIOC->ODR ^= GPIO_ODR_ODR13;
-        vTaskDelayUntil(&xLastTickEntry, pdMS_TO_TICKS(100));
-    }
-}
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={63-69},
+  firstnumber=63
+]{sources/ep1/src/main.c}
 
 La función toma como referencia el valor absoluto del conteo de ticks capturado al inicio (\texttt{xLastTickEntry})
 y calcula internamente el instante exacto del siguiente desbloqueo sumando el número de ticks equivalente a
@@ -108,23 +103,21 @@ la ejecución del cuerpo del bucle no alteran el periodo global de repetición.
 En el archivo de configuración del kernel se estableció la directiva \texttt{configUSE\_IDLE\_HOOK = 1}. Bajo esta
 condición, cada vez que la tarea Idle toma el procesador, invoca a la función de retorno definida por la aplicación:
 
-\begin{lstlisting}[language=C]
-void vApplicationIdleHook(void) {
-    ulIdleCount++;
-}
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={85-87},
+  firstnumber=85
+]{sources/ep1/src/main.c}
 
 La variable \texttt{ulIdleCount} se declara como volátil (\texttt{volatile uint32\_t}) para evitar que el compilador
 optimice su acceso en registros de CPU. En cada ciclo de telemetría ($\SI{2}{\second}$), la Tarea B formatea el valor
 acumulado en dicha variable y lo transmite:
 
-\begin{lstlisting}[language=C]
-uint32_t length = sprintf(buffer, "%s%lu\r\n", string, ulIdleCount);
-for (uint16_t i = 0; i < length; i++) {
-    while ((USART1->SR & USART_SR_TXE) == 0);
-    USART1->DR = buffer[i];
-}
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={76-80},
+  firstnumber=76
+]{sources/ep1/src/main.c}
 
 La velocidad de incremento de este contador permite corroborar que el microcontrolador permanece la mayor parte del
 tiempo disponible en estado inactivo, dado que la Tarea A solo utiliza unos pocos microsegundos por ciclo para conmutar

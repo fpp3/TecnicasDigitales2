@@ -31,7 +31,7 @@
 
   % Conexión Productor -> ADC -> ISR
   \draw[->, thick] (task_prod) -- node[left, font=\scriptsize] {\texttt{SWSTART}} (adc);
-  \draw[->, thick] (adc) -- node[above, font=\scriptsize] {Interrupción por fin de conversión (EOC)} (isr);
+  \draw[->, thick] (adc) -- node[above, font=\scriptsize] {EOCIF == 1} (isr);
 
   % Conexiones desde ISR hacia Semáforo y Cola
   \draw[thick] (isr.south) -- (fork);

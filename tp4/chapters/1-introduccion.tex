@@ -1,7 +1,7 @@
 \chapter{Introducción}
 
 En este trabajo práctico se aborda la integración y utilización de un sistema operativo en tiempo real
-en sistemas embebidos basados en la arquitectura ARM Cortex-M3. A diferencia del paradigma secuencial tradicional
+en sistemas embebidos basados en la arquitectura ARM Cortex-M3. A diferencia de los programas secuenciales tradicionales
 en bare-metal, el empleo de un kernel como FreeRTOS permite estructurar la aplicación en tareas concurrentes con
 prioridades asignadas, garantizando determinismo temporal, modularidad y un uso predecible de los recursos del
 microcontrolador.
@@ -15,8 +15,7 @@ El desarrollo se orienta a cumplir los siguientes objetivos específicos:
   STM32F103C8T6, ajustando los parámetros de temporización, gestión de memoria y planificación apropiativa.
   \item Diseñar e implementar tareas periódicas con diferentes niveles de prioridad, verificando el comportamiento
   del planificador apropiativo y evaluando la fracción de tiempo en reposo de la CPU mediante la función Idle Hook.
-  \item Resolver un esquema clásico de productor-consumidor mediante mecanismos formales de comunicación y
-  sincronización entre tareas provistos por el kernel: colas de mensajes y semáforos binarios.
+  \item Resolver un esquema clásico de productor-consumidor colas de mensajes y semáforos binarios.
   \item Integrar de forma segura la capa de interrupciones de periféricos de hardware con el entorno multitarea,
   utilizando las funciones especializadas de la API de FreeRTOS para rutinas de servicio de interrupción.
 \end{itemize}

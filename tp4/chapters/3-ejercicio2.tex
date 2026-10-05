@@ -15,7 +15,7 @@ luminosa con el LED integrado en el pin PC13.
 \section{Estructura de Tareas, Interrupciones y Prioridades}
 
 La arquitectura del sistema divide las responsabilidades entre tres tareas independientes y una rutina de servicio
-de interrupción (ISR) de hardware. En la tabla \ref{tab.ej2:tareas} se detallan sus atributos de ejecución.
+de interrupción (ISR) de hardware.
 
 \begin{table}[!ht]
 \centering
@@ -37,9 +37,9 @@ Elemento & Tipo & Prioridad & Período & Función / Rol \\
 El esquema de prioridades asignado responde a las siguientes consideraciones:
 
 \begin{enumerate}
-  \item \textbf{Prioridad 3 (\texttt{vBlink})}: Mantiene el nivel de prioridad más elevado para asegurar que la
-  señalización luminosa del sistema no experimente variaciones de fase frente a las ráfagas de cómputo del convertidor
-  o de la transmisión serie.
+  \item \textbf{Prioridad 3 (\texttt{vBlink})}: Se le asigna la prioridad más alta entre las tareas de usuario
+  a fin de asegurar que el cambio de estado lógico en el pin PC13 no sufra fluctuaciones frente a las esperas del
+    convertidor o de la transmisión serie.
   \item \textbf{Prioridad 2 (\texttt{vReadADC}, Tarea Productora)}: Se programa con prioridad superior a la tarea de
   telemetría. Cada $\SI{100}{\milli\second}$ inicia la secuencia de muestreo en el periférico analógico escribiendo el bit
   de inicio por software (\texttt{ADC\_CR2\_SWSTART}). Al poseer prioridad 2, tiene precedencia sobre la tarea de
@@ -50,7 +50,7 @@ El esquema de prioridades asignado responde a las siguientes consideraciones:
   el registro de estado de la USART.
   \item \textbf{Nivel de Interrupción (\texttt{ADC1\_2\_IRQHandler})}: Las interrupciones de periféricos operan por
   encima del nivel de tareas del sistema operativo, siendo administradas directamente por el controlador NVIC del
-  núcleo Cortex-M3. Al completarse la conversión analógica, la ISR atiende de inmediato el evento, transfiriendo la
+  núcleo. Al completarse la conversión analógica, la ISR atiende de inmediato el evento, transfiriendo la
   información a las estructuras del sistema operativo sin demoras.
 \end{enumerate}
 
@@ -72,15 +72,17 @@ ejecución se recurrió a los siguientes componentes del kernel:
 
 \subsection{Colas de Mensajes}
 
-La comunicación entre el contexto de interrupción y la tarea consumidora se resuelve mediante una cola unidireccional
+La comunicación entre el contexto de interrupción y la tarea consumidora se resuelve mediante una cola 
 creada en el arranque del sistema:
 
-\begin{lstlisting}[language=C]
-xADC1Queue = xQueueCreate(1, sizeof(uint32_t));
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={62-62},
+  firstnumber=62
+]{sources/ep2/src/main.c}
 
 La cola se dimensionó con una profundidad unitaria (\texttt{uxQueueLength = 1}) y un tamaño de elemento de cuatro bytes
-(\texttt{sizeof(uint32\_t)}), suficiente para alojar la palabra de datos entregada por el convertidor de doce bits.
+(\texttt{sizeof(uint32\_t)}), suficiente para alojar la palabra de datos entregada por el convertidor.
 
 FreeRTOS implementa el pasaje de datos por copia, lo que asegura que el valor transferido
 se preserve en el búfer interno administrado por el kernel, independientemente del ciclo de vida de las variables
@@ -89,18 +91,19 @@ locales de la rutina de interrupción.
 Desde la rutina de servicio \texttt{ADC1\_2\_IRQHandler()}, el envío se efectúa mediante la variante especializada
 para interrupciones:
 
-\begin{lstlisting}[language=C]
-BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-uint32_t ulADC1Value = ADC1->DR & ADC_DR_DATA_Msk;
-xQueueSendFromISR(xADC1Queue, &ulADC1Value, &xHigherPriorityTaskWoken);
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={136-138},
+  firstnumber=136
+]{sources/ep2/src/main.c}
 
 En la tarea consumidora, la extracción del elemento se lleva a cabo dentro de la función \texttt{vSendTelemetry()}:
 
-\begin{lstlisting}[language=C]
-uint32_t ulADC1Value;
-xQueueReceive(xADC1Queue, &ulADC1Value, 0);
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={114-115},
+  firstnumber=114
+]{sources/ep2/src/main.c}
 
 Al especificarse un tiempo de espera nulo (\texttt{xTicksToWait = 0}), la llamada no suspende a la tarea si la cola se
 encuentra transitoriamente desprovista de nuevos elementos, procediendo a emitir la última lectura disponible.
@@ -110,23 +113,28 @@ encuentra transitoriamente desprovista de nuevos elementos, procediendo a emitir
 La señalización del evento de fin de conversión se implementa a través de un semáforo binario creado con la función
 \texttt{xSemaphoreCreateBinary()}:
 
-\begin{lstlisting}[language=C]
-xADC1Semaphore = xSemaphoreCreateBinary();
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={63-63},
+  firstnumber=63
+]{sources/ep2/src/main.c}
 
 Al crearse, el semáforo binario se encuentra en estado vacío. Cuando el conversor analógico-digital completa el ciclo
 de aproximaciones sucesivas, la rutina de interrupción cede el semáforo invocando:
 
-\begin{lstlisting}[language=C]
-xSemaphoreGiveFromISR(xADC1Semaphore, &xHigherPriorityTaskWoken);
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={139-139},
+  firstnumber=139
+]{sources/ep2/src/main.c}
 
 En la tarea productora \texttt{vReadADC()}, la instrucción:
 
-\begin{lstlisting}[language=C]
-ADC1->CR2 |= ADC_CR2_SWSTART;
-xSemaphoreTake(xADC1Semaphore, 0);
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={129-130},
+  firstnumber=129
+]{sources/ep2/src/main.c}
 
 inicia la conversión y toma el testigo de sincronización generado por el periférico.
 
@@ -135,15 +143,11 @@ inicia la conversión y toma el testigo de sincronización generado por el perif
 Un aspecto relevante de la interacción entre las interrupciones del microcontrolador y el planificador de FreeRTOS
 reside en la macro \texttt{portYIELD\_FROM\_ISR()}:
 
-\begin{lstlisting}[language=C]
-void ADC1_2_IRQHandler(void) {
-    BaseType_t xHigherPriorityTaskWoken;
-    uint32_t ulADC1Value = ADC1->DR & ADC_DR_DATA_Msk;
-    xQueueSendFromISR(xADC1Queue, &ulADC1Value, &xHigherPriorityTaskWoken);
-    xSemaphoreGiveFromISR(xADC1Semaphore, &xHigherPriorityTaskWoken);
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-}
-\end{lstlisting}
+\lstinputlisting[
+  language=C,
+  linerange={135-141},
+  firstnumber=135
+]{sources/ep2/src/main.c}
 
 Cuando una función con sufijo \texttt{FromISR} desbloquea una tarea cuya prioridad es superior a la de la tarea que
 se encontraba en ejecución al dispararse la interrupción, la variable \texttt{xHigherPriorityTaskWoken} se establece
