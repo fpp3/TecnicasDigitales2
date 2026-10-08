@@ -1,0 +1,8 @@
+00_00_00_1_0_1_00000_0000_0101 // data addr 0, load en, data in en, datain=5 (R0 = 5)
+01_00_00_1_0_1_00000_0000_0011 // data addr 1, load en, data in en, datain=3 (R1 = 3)
+10_01_00_1_0_0_10010_0000_0000 // data addr 2, a addr 0, b addr 1, load en, alu en, SUM (R2 = R0 + R1)
+11_10_11_0_0_0_00000_0000_0000 // data addr 3 (ro), a addr 3, b addr 2 (DataOut = R2, AddrOut = R3)
+10_11_10_1_1_0_10101_0010_0000 // data addr 2, a addr 2, b addr 3 (ign), load en, const en, const=2, alu en, SUB (R2 = R2 + ~const  + 1)
+11_10_11_0_0_0_00000_0000_0000 // data addr 3 (ro), a addr 3, b addr 2 (DataOut = R2, AddrOut = R3)
+10_10_10_1_0_0_00001_0000_0000 // data addr 2, a addr 2, b addr 2, load en, shifter en, SHL (R2 = R2 << 1)
+11_10_11_0_0_0_00000_0000_0000 // data addr 3 (ro), a addr 3, b addr 2 (DataOut = R2, AddrOut = R3)
