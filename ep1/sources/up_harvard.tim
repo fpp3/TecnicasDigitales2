@@ -1,0 +1,123 @@
+Timing Analyzer Settings
+     Time_Scale:        1.000000E-12
+     Time_Per_Division: 1.600000E+04
+     NumberDivisions:   10
+     Start_Time:        0.0
+     End_Time:          160000.0
+Digital_Signal
+     Position:          1
+     Height:            24
+     Space_Above:       24
+     Name:              clk
+     Start_State:       0
+     Number_Edges:      15
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               10000.0 1
+          Edge:               20000.0 0
+          Edge:               30000.0 1
+          Edge:               40000.0 0
+          Edge:               50000.0 1
+          Edge:               60000.0 0
+          Edge:               70000.0 1
+          Edge:               80000.0 0
+          Edge:               90000.0 1
+          Edge:               100000.0 0
+          Edge:               110000.0 1
+          Edge:               120000.0 0
+          Edge:               130000.0 1
+          Edge:               140000.0 0
+          Edge:               150000.0 1
+Digital_Bus
+     Position:          2
+     Height:            24
+     Space_Above:       24
+     Name:              datain[3:0]
+     Start_State:       5
+     State_Format:      Hex
+     Number_Edges:      2
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               20000.0 3
+          Edge:               40000.0 0
+Digital_Bus
+     Position:          3
+     Height:            24
+     Space_Above:       24
+     Name:              constin[3:0]
+     Start_State:       0
+     State_Format:      Hex
+     Number_Edges:      2
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               80000.0 2
+          Edge:               100000.0 0
+Digital_Bus
+     Position:          4
+     Height:            24
+     Space_Above:       24
+     Name:              control[13:0]
+     Start_State:       00A0
+     State_Format:      Hex
+     Number_Edges:      7
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               20000.0 10A0
+          Edge:               40000.0 2492
+          Edge:               60000.0 3B00
+          Edge:               80000.0 2ED5
+          Edge:               100000.0 3B00
+          Edge:               120000.0 2A81
+          Edge:               140000.0 3B00
+Digital_Bus
+     Position:          5
+     Height:            24
+     Space_Above:       24
+     Name:              dataout[3:0]
+     Start_State:       X
+     State_Format:      Hex
+     Number_Edges:      6
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               10000.0 5
+          Edge:               40000.0 3
+          Edge:               60000.0 8
+          Edge:               80000.0 2
+          Edge:               100000.0 6
+          Edge:               130000.0 C
+Digital_Bus
+     Position:          6
+     Height:            24
+     Space_Above:       24
+     Name:              addressout[3:0]
+     Start_State:       X
+     State_Format:      Hex
+     Number_Edges:      8
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               10000.0 5
+          Edge:               60000.0 X
+          Edge:               80000.0 8
+          Edge:               90000.0 6
+          Edge:               100000.0 X
+          Edge:               120000.0 6
+          Edge:               130000.0 C
+          Edge:               140000.0 X
+Digital_Bus
+     Position:          7
+     Height:            24
+     Space_Above:       24
+     Name:              flags[3:0]
+     Start_State:       X
+     State_Format:      Hex
+     Number_Edges:      8
+     Rise_Time:         0.2
+     Fall_Time:         0.2
+          Edge:               10000.0 0
+          Edge:               40000.0 4
+          Edge:               60000.0 X
+          Edge:               80000.0 1
+          Edge:               100000.0 X
+          Edge:               120000.0 0
+          Edge:               130000.0 4
+          Edge:               140000.0 X

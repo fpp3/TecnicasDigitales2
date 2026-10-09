@@ -1,0 +1,21 @@
+\chapter{Introducción}
+
+En este trabajo práctico se aborda el diseño, la implementación en lenguaje SystemVerilog y la validación
+funcional de una Unidad de Procesamiento con arquitectura tipo Harvard.
+
+El presente trabajo concentra el desarrollo del punto 4 de la consigna: la integración jerárquica y el análisis
+exhaustivo de la unidad procesadora Harvard (\texttt{up\_harvard}), empleando los módulos precedentes como componentes
+fundamentales del sistema.
+
+\section{Objetivos del trabajo}
+
+\begin{itemize}
+  \item Diseñar en SystemVerilog una unidad de datos modular.
+  \item Integrar un banco de registros de tres puertos con una ALU y un Shifter. 
+  \item Sintetizar el diseño a fin de inspeccionar el esquemático RTL resultante y corroborar la correspondencia entre
+    la descripción en hardware y la topología implementada.
+  \item Comprobar el funcionamiento del camino de datos a través de una simulación temporal en la cual se ejecuten
+    operaciones de carga, adición, sustracción con constantes y desplazamientos lógicos, registrando las banderas de
+    estado generadas.
+\end{itemize}
+

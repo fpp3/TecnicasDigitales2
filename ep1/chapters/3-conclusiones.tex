@@ -1,0 +1,31 @@
+\chapter{Conclusiones}\label{sec.ej1:conclusiones}
+
+La implementación y verificación de la unidad de procesamiento con arquitectura Harvard desarrollada en este trabajo
+práctico dio resultados coherentes con los requerimientos teóricos planteados para el diseño de procesadores.
+
+En primer término, la organización jerárquica del camino de datos permitió desacoplar con éxito la memoria interna
+(banco de registros de tres puertos) de las unidades aritméticas y lógicas de procesamiento. La utilización de puertos
+de lectura puramente combinacionales y un único puerto de escritura síncrono facilitó la realización de ciclos de
+cálculo en los cuales los operandos se leen, se operan en la ALU o en el desplazador, y el resultado queda disponible
+en el bus de escritura dentro del mismo período de reloj, efectuándose la captura en memoria al presentarse el flanco
+activo.
+
+En segundo lugar, se validó la eficacia de la descomposición de la palabra de control (\texttt{regCTRL}). Esta práctica
+resultó indispensable para verificar visualmente en el esquemático RTL cómo la palabra de control ingresa y bifurca sus
+campos hacia las instancias de procesamiento y los multiplexores de selección.
+
+En tercer lugar, la simulación temporal en el banco de pruebas confirmó la ejecución exacta de las operaciones
+solicitadas:
+\begin{itemize}
+  \item La adición entre los valores precargados en $R_0$ (5) y $R_1$ (3) produjo el resultado 8 y
+        activó de manera correcta la bandera de signo negativo ($N = 1$), debido a la convención de signo en el bit 3.
+  \item La sustracción entre el acumulador $R_2$ (8) y el dato constante externo $cIN$ (2) a través de la vía de
+        entrada alternativa del multiplexor B entregó el resultado 6 (\texttt{0110b}) con activación de la bandera de
+        acarreo ($C = 1$), ratificando la adecuada implementación del complemento a dos ($A + \sim B + 1$).
+  \item La posterior operación de desplazamiento lógico a la izquierda duplicó el valor almacenado en $R_2$ alcanzando
+        12 (\texttt{1100b}), verificando la correcta selectividad del multiplexor de la unidad funcional.
+\end{itemize}
+
+En síntesis, la experiencia permitió comprobar de manera analítica y experimental el funcionamiento coordinado de una
+unidad de procesamiento Harvard, sentando las bases de hardware sobre las cuales se diseñan las unidades de control y
+los secuenciadores de instrucciones en arquitecturas computacionales.

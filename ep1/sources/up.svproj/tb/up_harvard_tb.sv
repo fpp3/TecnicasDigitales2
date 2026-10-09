@@ -1,20 +1,5 @@
 `timescale 1ns/1ps
 
-// (21) D Address (MSB)       ┐M    ┐ 3*M
-// (20) D Address (LSB)       ┘     │
-// (19) B Address (MSB)       ┐M    │
-// (18) B Address (LSB)       ┘     │
-// (17) A Address (MSB)       ┐M    │
-// (16) A Address (LSB)       ┘     ┘
-// (15) Load Enable                 ┐ 3
-// (14) Constant In Enable (MUX B)  │
-// (13) Data In Enable (MUX D)      ┘
-// (12) ALU Enable
-// (11) ALU Control Bit 3
-// (10) ALU/Shifter Control Bit 2
-// (9)  ALU/Shifter Control Bit 1
-// (8)  ALU/Shifter Control Bit 0
-
 module up_harvard_tb();
 	logic clk;
 	logic [13:0] control;

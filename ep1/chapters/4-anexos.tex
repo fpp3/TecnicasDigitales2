@@ -1,0 +1,45 @@
+\chapter{Anexos: Código Fuente y Banco de Pruebas}\label{sec.ej1:anexos}
+
+En este anexo se detallan los códigos fuente completos en SystemVerilog utilizados para la síntesis y simulación de la
+unidad procesadora con arquitectura Harvard, junto con el archivo de vectores del banco de pruebas.
+
+\section{Módulo principal de la unidad Harvard (up\_harvard.sv)}
+\lstinputlisting[
+  language=SystemVerilog,
+  caption={Descripción RTL de la unidad de procesamiento Harvard (\texttt{up\_harvard.sv}).},
+  label={list.ej1:up_harvard}
+]{sources/up.svproj/src/up_harvard.sv}
+
+\section{Módulo de la unidad aritmético-lógica (alu.sv)}
+\lstinputlisting[
+  language=SystemVerilog,
+  caption={Implementación de la unidad aritmético-lógica (\texttt{alu.sv}).},
+  label={list.ej1:alu}
+]{sources/up.svproj/src/alu.sv}
+
+\section{Módulo del desplazador (shifter.sv)}
+\lstinputlisting[
+  language=SystemVerilog,
+  caption={Implementación de la unidad de corrimiento (\texttt{shifter.sv}).},
+  label={list.ej1:shifter}
+]{sources/up.svproj/src/shifter.sv}
+
+\section{Módulo del banco de registros (ram3port.sv)}
+\lstinputlisting[
+  language=SystemVerilog,
+  caption={Banco de registros de tres puertos (\texttt{ram3port.sv}).},
+  label={list.ej1:ram3port}
+]{sources/up.svproj/src/ram3port.sv}
+
+\section{Banco de pruebas (up\_harvard\_tb.sv)}
+\lstinputlisting[
+  language=SystemVerilog,
+  caption={Banco de pruebas para verificación funcional (\texttt{up\_harvard\_tb.sv}).},
+  label={list.ej1:tb}
+]{sources/up.svproj/tb/up_harvard_tb.sv}
+
+\section{Archivo de vectores de prueba (up\_harvard\_mem.txt)}
+\lstinputlisting[
+  caption={Patrones de prueba para el banco de pruebas (\texttt{up\_harvard\_mem.txt}).},
+  label={list.ej1:mem}
+]{sources/up.svproj/tb/up_harvard_mem.txt}

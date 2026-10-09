@@ -1,0 +1,47 @@
+\begin{tikztimingtable}[
+    timing/slope=0.05,
+    timing/coldist=4pt,
+    xscale=2.2,
+    yscale=1.1,
+    timing/dslope=0.1
+]
+  \texttt{clk}            & 16{C} \\
+  \texttt{datain[3:0]}    & 2D{5} 2D{3} 12D{0} \\
+  \texttt{constin[3:0]}   & 8D{0} 2D{2} 6D{0} \\
+  \texttt{control[13:0]}  & 2D{00A0} 2D{10A0} 2D{2492} 2D{3B00} 2D{2ED5} 2D{3B00} 2D{2A81} 2D{3B00} \\
+  \texttt{dataout[3:0]}   & 1X 3D{5} 2D{3} 2D{8} 2D{2} 3D{6} 3D{12} \\
+  \texttt{addressout[3:0]}& 1X 5D{5} 2X 1D{8} 1D{6} 2X 1D{6} 1D{12} 2X \\
+  \texttt{flags[3:0]}     & 1X 3D{0000} 2D{0100} 2X 2D{0001} 2X 1D{0000} 1D{0100} 2X \\
+\extracode
+  % Fondo sombreado alternado para distinguir cada ciclo de reloj
+  \begin{pgfonlayer}{background}
+    \foreach \t in {0, 4, 8, 12} {
+      \pgfmathsetmacro{\tend}{\t+2}
+      \fill[blue!4] (\t, 2.2) rectangle (\tend, -14.5);
+    }
+    \vertlines[gray!40, dashed, line width=0.5pt]{0, 2, ..., 16}
+  \end{pgfonlayer}
+
+  % Tiempos numéricos (eje temporal superior, cada 20 ns)
+  \foreach \i in {0, ..., 8} {
+    \pgfmathsetmacro{\x}{\i * 2}
+    \pgfmathsetmacro{\tval}{\i * 20}
+    \node[font=\sffamily\tiny, text=gray!80!black, anchor=south] at (\x, 4.4) {$\pgfmathprintnumber{\tval}$\,ns};
+  }
+
+  % Ciclos T0 a T7 y descripción de operaciones
+  \foreach \i/\desc in {
+    0/{Carga $R_0$},
+    1/{Carga $R_1$},
+    2/{Suma},
+    3/{Lectura},
+    4/{Resta},
+    5/{Lectura},
+    6/{SHL},
+    7/{Lectura}
+  } {
+    \pgfmathsetmacro{\xc}{\i * 2 + 1}
+    \node[font=\sffamily\scriptsize\bfseries, blue!80!black, anchor=south] at (\xc, 3.4) {$T_\i$};
+    \node[font=\sffamily\tiny, text=darkgray, anchor=south] at (\xc, 2.4) {\desc};
+  }
+\end{tikztimingtable}

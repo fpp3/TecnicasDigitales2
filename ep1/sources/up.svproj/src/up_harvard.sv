@@ -4,32 +4,12 @@ module up_harvard #(parameter M = 2, N = 4)
                     input logic [(3*M+3+5-1):0] regCTRL,
                     output logic [(N-1):0] dOUT, aOUT, // dOUT: Data Out, aOUT: Address Out
                     output logic [3:0] sOUT); // sOUT: Status Out
-// regCTRL:
-// (13) D Address (MSB)       ┐M    ┐ 3*M
-// (12) D Address (LSB)       ┘     │
-// (11) B Address (MSB)       ┐M    │
-// (10) B Address (LSB)       ┘     │
-// (9)  A Address (MSB)       ┐M    │
-// (8)  A Address (LSB)       ┘     ┘
-// (7)  Load Enable                 ┐ 3
-// (6)  Constant In Enable (MUX B)  │
-// (5)  Data In Enable (MUX D)      ┘
-// (4)  Function Select (MSB)       ┐ 5
-// (0)  Function Select (LSB)       ┘
 
-// functionSelect:
-// (4): ALU Enable
-// (3): ALU Control Bit 3
-// (2): ALU/Shifter Control Bit 2
-// (1): ALU/Shifter Control Bit 1
-// (0): ALU/Shifter Control Bit 0
-
-
-   (* keep = 1 *) logic loadEnable, constInEnable, dataInEnable, aluEnable;
-   (* keep = 1 *) logic [(M-1):0] aAddress, bAddress, dAddress;
-   (* keep = 1 *) logic [(N-1):0] aBus, bBus, dBus, aluOut, shifterOut, functionUnitOut;
-   (* keep = 1 *) logic [3:0] aluControl;
-   (* keep = 1 *) logic [2:0] shifterControl;
+   logic loadEnable, constInEnable, dataInEnable, aluEnable;
+   logic [(M-1):0] aAddress, bAddress, dAddress;
+   logic [(N-1):0] aBus, bBus, dBus, aluOut, shifterOut, functionUnitOut;
+   logic [3:0] aluControl;
+   logic [2:0] shifterControl;
    assign dAddress = regCTRL[(8+3*M-1):(8+2*M)];
    assign bAddress = regCTRL[(8+2*M-1):(8+M)];
    assign aAddress = regCTRL[(8+M-1):8];
